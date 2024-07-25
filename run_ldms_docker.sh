@@ -1,5 +1,10 @@
 #!/bin/bash
-#
+# This is a simple automation that will write and utilize a Dockerfile
+# to pull a debian image, and within it build from source tag v4.4.3 OVIS-HPC/ovis.git
+# for the target platform arch (i.e., ARM64), then extract from the image a 
+# archive that is able to be extracted onto a HPE Slingshot Switch
+# usage: ./run_ldms_docker.sh
+
 heredoc_dockerfile () {
 cat << DOCKERFILE >Dockerfile
 FROM docker.io/debian:buster
@@ -15,9 +20,7 @@ RUN apt update \\
        libssl-dev \\
        libtool \\
        make \\
-       vim \\
        git \\
-       tar \\
        pkg-config
 RUN sh <<EOF > /build-script.sh
 git clone http://github.com/ovis-hpc/ovis.git -b v4.4.3 && \\
@@ -66,10 +69,7 @@ cd ovis && \\
   --disable-ibnet
   --disable-timescale-store
   --enable-slingshot_switch CFLAGS='-g -O0' n
-  make -j && make install &&
-cd / &&
-tar cvfj ${LDMS_PREFIX}.tar.xz ${LDMS_PREFIX} &&
-readlink -f ${LDMS_PREFIX}.tar.xz
+  make -j && make install
 EOF
 DOCKERFILE
 }
@@ -84,12 +84,11 @@ unset DOCKER_PASSWORD
 
 LDMS_PREFIX="/ovis_v4.4.3"
 heredoc_dockerfile
-[ -f Dockerfile ] && cat Dockerfile
-
 docker build -t ldms-slingshot-build .
-LDMS_ARTIFACT_PATH=${PWD}/ovis_v4.4.3
-docker run --entrypoint tar ldms-slingshot-build czf - ${LDMS_PREFIX} > ${LDMS_PREFIX//\/}.tar.gz
-[ -f ${LDMS_PREFIX//\/}.tar.gz ] && echo "LDMS Ubuntu Installation for ARM64 Slingshot Switch Samplers is at $(readlink -f ${LDMS_PREFIX//\/}.tar.gz)"
+LDMS_ARTIFACT_PATH=${PWD}/archives
+mkdir -p $LDMS_ARTIFACT_PATH
+docker run --entrypoint tar ldms-slingshot-build cjf - ${LDMS_PREFIX} > ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz
+[ -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz ] && echo "LDMS Ubuntu Installation for ARM64 Slingshot Switch Samplers is at $(readlink -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz)"
 
 #docker run --rm -ti \\
 #docker run -ti \
