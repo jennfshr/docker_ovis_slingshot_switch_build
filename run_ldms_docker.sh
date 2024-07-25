@@ -22,7 +22,7 @@ RUN apt update \\
        make \\
        git \\
        pkg-config
-RUN sh <<EOF > /build-script.sh
+RUN sh <<EOF > /build.log
 git clone http://github.com/ovis-hpc/ovis.git -b v4.4.3 && \\
 cd ovis && \\
 [ -x autogen.sh ] && ./autogen.sh &&
