@@ -1,3 +1,7 @@
+# Slingshot Switch Sampler LDMS Installation in a Docker Debian Container
+
+## Jennifer Green <jkgreen@sandia.gov> (inspired by Cory Lueninghoener's original documentation)
+
 This is a rather simple implementation of a docker build and run invocation on a Macintosh Apple M2 Max.
 
 No positional parameters are supplied to the script, but it will prompt for a docker username and password to authenticate to the docker registry.
