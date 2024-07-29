@@ -27,48 +27,7 @@ git clone http://github.com/ovis-hpc/ovis.git -b v4.4.3 && \\
 cd ovis && \\
 [ -x autogen.sh ] && ./autogen.sh &&
 [ -x configure ] &&
-./configure --prefix=${LDMS_PREFIX}
-  --libdir=${LDMS_PREFIX}/lib64
-  --disable-infiniband
-  --disable-papi
-  --disable-opa2
-  --disable-tx2mon
-  --disable-static
-  --disable-perf
-  --disable-store
-  --disable-flatfile
-  --disable-csv
-  --disable-lustre
-  --disable-clock
-  --disable-synthetic
-  --disable-varset
-  --disable-lnet_stats
-  --disable-gpumetrics
-  --disable-coretemp
-  --disable-array_example
-  --disable-hello_stream
-  --disable-blob_stream
-  --disable-procinterrupts
-  --disable-procnet
-  --disable-procnetdev
-  --disable-procnfs
-  --disable-dstat
-  --disable-procstat
-  --disable-llnl-edac
-  --disable-tsampler
-  --disable-cray_power_sampler
-  --disable-loadavg
-  --disable-vmstat
-  --disable-procdiskstats
-  --disable-spaceless_names
-  --disable-generic_sampler
-  --disable-jobinfo-sampler
-  --disable-app-sampler
-  --disable-readline
-  --with-slurm=no
-  --disable-ibnet
-  --disable-timescale-store
-  --enable-slingshot_switch CFLAGS='-g -O0' n
+./configure --prefix=${LDMS_PREFIX} --libdir=${LDMS_PREFIX}/lib64 --disable-infiniband --disable-papi --disable-opa2 --disable-tx2mon --disable-static --disable-perf --disable-store --disable-flatfile --disable-csv --disable-lustre --disable-clock --disable-synthetic --disable-varset --disable-lnet_stats --disable-gpumetrics --disable-coretemp --disable-array_example --disable-hello_stream --disable-blob_stream --disable-procinterrupts --disable-procnet --disable-procnetdev --disable-procnfs --disable-dstat --disable-procstat --disable-llnl-edac --disable-tsampler --disable-cray_power_sampler --disable-loadavg --disable-vmstat --disable-procdiskstats --disable-spaceless_names --disable-generic_sampler --disable-jobinfo-sampler --disable-app-sampler --disable-readline --with-slurm=no --disable-ibnet --disable-timescale-store --enable-slingshot_switch CFLAGS='-g -O0' &&
   make -j && make install
 EOF
 DOCKERFILE
@@ -90,7 +49,7 @@ mkdir -p $LDMS_ARTIFACT_PATH
 docker run --entrypoint tar ldms-slingshot-build cjf - ${LDMS_PREFIX} > ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz
 [ -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz ] && echo "LDMS Ubuntu Installation for ARM64 Slingshot Switch Samplers is at $(readlink -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz)"
 
- tar --extract --file=archives/ovis_v4.4.3.tar.xz ovis_v4.4.3/lib/ovis-ldms/libslingshot_switch.so.0.0.0 && file ovis_v4.4.3/lib/ovis-ldms/libslingshot_switch.so.0.0.0 && rm -Rf ovis_v4.4.3
+ tar --extract --file=archives/ovis_v4.4.3.tar.xz ovis_v4.4.3/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 && file ovis_v4.4.3/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 && rm -Rf ovis_v4.4.3
 #docker run --rm -ti \\
 #docker run -ti \
 #    -v ${LDMS_ARTIFACT_PATH}:$LDMS_PREFIX:rw \
