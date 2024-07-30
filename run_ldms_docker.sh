@@ -29,46 +29,46 @@ cd ovis && \\
 [ -x configure ] &&
 ./configure \\
   --prefix=${LDMS_PREFIX} \\
-  --libdir=${LDMS_PREFIX}/lib64\\
-  --disable-infiniband\\
-  --disable-papi\\
-  --disable-opa2\\
-  --disable-tx2mon\\
-  --disable-static\\
-  --disable-perf\\
-  --disable-store\\
-  --disable-flatfile\\
-  --disable-csv\\
-  --disable-lustre\\
-  --disable-clock\\
-  --disable-synthetic\\
-  --disable-varset\\
-  --disable-lnet_stats\\
-  --disable-gpumetrics\\
-  --disable-coretemp\\
-  --disable-array_example\\
-  --disable-hello_stream\\
-  --disable-blob_stream\\
-  --disable-procinterrupts\\
-  --disable-procnet\\
-  --disable-procnetdev\\
-  --disable-procnfs\\
-  --disable-dstat\\
-  --disable-procstat\\
-  --disable-llnl-edac\\
-  --disable-tsampler\\
-  --disable-cray_power_sampler\\
-  --disable-loadavg\\
-  --disable-vmstat\\
-  --disable-procdiskstats\\
-  --disable-spaceless_names\\
-  --disable-generic_sampler\\
-  --disable-jobinfo-sampler\\
-  --disable-app-sampler\\
-  --disable-readline\\
-  --with-slurm=no\\
-  --disable-ibnet\\
-  --disable-timescale-store\\
+  --libdir=${LDMS_PREFIX}/lib64 \\
+  --disable-infiniband \\
+  --disable-papi \\
+  --disable-opa2 \\
+  --disable-tx2mon \\
+  --disable-static \\
+  --disable-perf \\
+  --disable-store \\
+  --disable-flatfile \\
+  --disable-csv \\
+  --disable-lustre \\
+  --disable-clock \\
+  --disable-synthetic \\
+  --disable-varset \\
+  --disable-lnet_stats \\
+  --disable-gpumetrics \\
+  --disable-coretemp \\
+  --disable-array_example \\
+  --disable-hello_stream \\
+  --disable-blob_stream \\
+  --disable-procinterrupts \\
+  --disable-procnet \\
+  --disable-procnetdev \\
+  --disable-procnfs \\
+  --disable-dstat \\
+  --disable-procstat \\
+  --disable-llnl-edac \\
+  --disable-tsampler \\
+  --disable-cray_power_sampler \\
+  --disable-loadavg \\
+  --disable-vmstat \\
+  --disable-procdiskstats \\
+  --disable-spaceless_names \\
+  --disable-generic_sampler \\
+  --disable-jobinfo-sampler \\
+  --disable-app-sampler \\
+  --disable-readline \\
+  --with-slurm=no \\
+  --disable-ibnet \\
+  --disable-timescale-store \\
   --enable-slingshot_switch CFLAGS='-g -O0' &&
   make -j && make install
 EOF
