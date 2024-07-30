@@ -93,20 +93,28 @@ heredoc_dockerfile
 docker build -t ldms-slingshot-build .
 
 # Establish a staging area for the archive, then a "tar" entrypoint to redirect there
-LDMS_ARTIFACT_PATH=${PWD}/archives
-[ -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz ] && mv ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz.$(date +%m-%d-%y"-"%H.%M.%S)
+LDMS_ARTIFACT_PATH="${PWD}/archives"
+[ -f ${LDMS_ARTIFACT_PATH}/${LDMS_PREFIX//\/}.tar.xz ] && \
+  mv ${LDMS_ARTIFACT_PATH}/${LDMS_PREFIX//\/}.tar.xz \
+  ${LDMS_ARTIFACT_PATH}/${LDMS_PREFIX//\/}.tar.xz.$(date +%m-%d-%y"-"%H.%M.%S)
 mkdir -p $LDMS_ARTIFACT_PATH
 
-docker run --entrypoint tar ldms-slingshot-build cjf - ${LDMS_PREFIX} > ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz
+docker run --entrypoint tar ldms-slingshot-build \
+                        cjf - ${LDMS_PREFIX} \
+                        > ${LDMS_ARTIFACT_PATH}/${LDMS_PREFIX//\/}.tar.xz
 
 # Sanity Check the created archive
 
-[ -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz ] && \
+[ -f ${LDMS_ARTIFACT_PATH}/${LDMS_PREFIX//\/}.tar.xz ] && \
   echo "LDMS Ubuntu Installation for ARM64 Slingshot Switch Samplers \
-  is at $(readlink -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz)" ||
-  echo "Archive at ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz not found!" && 
-  exit -1
-
+  is at $(readlink -f ${LDMS_ARTIFACT_PATH}/${LDMS_PREFIX//\/}.tar.xz)" ||
+  echo "Archive at ${LDMS_ARTIFACT_PATH}/${LDMS_PREFIX//\/}.tar.xz not found!"
 # Sanity Check the sampler libs and script staging in archive
-tar --extract --file=archives/ovis_v4.4.3.tar.xz ovis_v4.4.3/bin/gen_switch_config.sh && cat ovis_v4.4.3/bin/gen_switch_config.sh && rm -Rf ovis_v4.4.3
-tar --extract --file=archives/ovis_v4.4.3.tar.xz ovis_v4.4.3/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 && file ovis_v4.4.3/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 && rm -Rf ovis_v4.4.3
+tar --extract --file=${LDMS_ARTIFACT_PATH}/${LDMS_PREFIX//\/}.tar.xz \
+  ${LDMS_PREFIX//\/}/bin/gen_switch_config.sh \
+  && file ${LDMS_PREFIX//\/}/bin/gen_switch_config.sh \
+  && rm -Rf ${LDMS_PREFIX//\/}
+tar --extract --file=${LDMS_ARTIFACT_PATH}/${LDMS_PREFIX//\/}.tar.xz \
+  ${LDMS_PREFIX//\/}/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 \
+  && file ${LDMS_PREFIX//\/}/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 \
+  && rm -Rf ${LDMS_PREFIX//\/}
