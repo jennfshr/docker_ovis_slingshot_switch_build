@@ -70,7 +70,10 @@ cd ovis && \\
   --disable-ibnet \\
   --disable-timescale-store \\
   --enable-slingshot_switch CFLAGS='-g -O0' &&
-  make -j && make install
+  make -j && make install && cd ../ &&
+  git clone https://github.com/jennfshr/docker_ovis_slingshot_switch_build.git &&
+  cp docker_ovis_slingshot_switch_build/gen_switch_config.sh ${LDMS_PREFIX}/bin/. &&
+  chmod +x ${LDMS_PREFIX}/bin/gen_switch_config.sh
 EOF
 DOCKERFILE
 }
@@ -85,14 +88,16 @@ unset DOCKER_PASSWORD
 
 # Setup the Dockerfile via a heredoc function (adjustable above ^^)
 LDMS_PREFIX="/ovis_v4.4.3"
+[ -f Dockerfile ] && rm Dockerfile
 heredoc_dockerfile
 docker build -t ldms-slingshot-build .
 
 # Establish a staging area for the archive, then a "tar" entrypoint to redirect there
 LDMS_ARTIFACT_PATH=${PWD}/archives
+[ -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz ] && mv ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz.$(date +%m-%d-%y"-"%H.%M.%S)
 mkdir -p $LDMS_ARTIFACT_PATH
-docker run --entrypoint tar ldms-slingshot-build cjf - ${LDMS_PREFIX} > ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz
 
+docker run --entrypoint tar ldms-slingshot-build cjf - ${LDMS_PREFIX} > ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz
 
 # Sanity Check the created archive
 
@@ -102,4 +107,6 @@ docker run --entrypoint tar ldms-slingshot-build cjf - ${LDMS_PREFIX} > ${LDMS_A
   echo "Archive at ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz not found!" && 
   exit -1
 
+# Sanity Check the sampler libs and script staging in archive
+tar --extract --file=archives/ovis_v4.4.3.tar.xz ovis_v4.4.3/bin/gen_switch_config.sh && cat ovis_v4.4.3/bin/gen_switch_config.sh && rm -Rf ovis_v4.4.3
 tar --extract --file=archives/ovis_v4.4.3.tar.xz ovis_v4.4.3/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 && file ovis_v4.4.3/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 && rm -Rf ovis_v4.4.3
