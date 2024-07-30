@@ -41,17 +41,23 @@ echo "$DOCKER_PASSWORD" | docker login -u ${DOCKER_USERNAME} --password-stdin
 #echo "$DOCKER_PASSWORD" | docker login $REGISTRY_URL -u ${DOCKER_USERNAME} --password-stdin 
 unset DOCKER_PASSWORD
 
+# Setup the Dockerfile via a heredoc function (adjustable above ^^)
 LDMS_PREFIX="/ovis_v4.4.3"
 heredoc_dockerfile
 docker build -t ldms-slingshot-build .
+
+# Establish a staging area for the archive, then a "tar" entrypoint to redirect there
 LDMS_ARTIFACT_PATH=${PWD}/archives
 mkdir -p $LDMS_ARTIFACT_PATH
 docker run --entrypoint tar ldms-slingshot-build cjf - ${LDMS_PREFIX} > ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz
-[ -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz ] && echo "LDMS Ubuntu Installation for ARM64 Slingshot Switch Samplers is at $(readlink -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz)"
 
- tar --extract --file=archives/ovis_v4.4.3.tar.xz ovis_v4.4.3/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 && file ovis_v4.4.3/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 && rm -Rf ovis_v4.4.3
-#docker run --rm -ti \\
-#docker run -ti \
-#    -v ${LDMS_ARTIFACT_PATH}:$LDMS_PREFIX:rw \
-#    ldms-slingshot-build
 
+# Sanity Check the created archive
+
+[ -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz ] && \
+  echo "LDMS Ubuntu Installation for ARM64 Slingshot Switch Samplers \
+  is at $(readlink -f ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz)" ||
+  echo "Archive at ${LDMS_ARTIFACT_PATH}${LDMS_PREFIX}.tar.xz not found!" && 
+  exit -1
+
+tar --extract --file=archives/ovis_v4.4.3.tar.xz ovis_v4.4.3/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 && file ovis_v4.4.3/lib64/ovis-ldms/libslingshot_switch.so.0.0.0 && rm -Rf ovis_v4.4.3
