@@ -18,10 +18,10 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: arm64v8/ubuntu
     env:      
       DOCKER_REGISTRY: docker.io
-      DOCKER_IMAGE: ubuntu/latest
+      DOCKER_IMAGE: arm64v8/ubuntu
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       DOCKER_TARGET_PLATFORM: linux/arm/v7
