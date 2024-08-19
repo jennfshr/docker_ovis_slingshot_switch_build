@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu:latest
     env:      
       DOCKER_REGISTRY: docker.io
-      DOCKER_IMAGE: arm64v8/debian:latest
+      DOCKER_IMAGE: ubuntu:latest
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       DOCKER_TARGET_PLATFORM: linux/arm/v7
