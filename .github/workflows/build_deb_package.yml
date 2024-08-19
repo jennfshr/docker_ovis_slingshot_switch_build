@@ -35,7 +35,6 @@ jobs:
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
       with:
-        image: ubuntu:latest
         platforms: 'linux/arm64'
         
     - name: Set up Docker Buildx      
