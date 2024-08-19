@@ -19,7 +19,7 @@ RUN apt update \
        python3-dev \
        vim
 RUN bash <<EOF
-set -x && mkdir -p ovis-ldms-debian-package && cd ovis-ldms-debian-package && export DEBEMAIL="jkgreen@sandia.gov" && export DEBFULLNAME="Jennifer K. Green" && export DEB_BUILD_ARCH="arm64" && echo "Cloning ovis" && git clone http://github.com/ovis-hpc/ovis.git -b v4.4.3 ovis-ldms-4.4.3 && tar cfJ ovis-ldms-4.4.3.tar.xz ovis-ldms-4.4.3 && cd ovis-ldms-4.4.3 && dh_make -i -y -f ../ovis-ldms-4.4.3.tar.xz -e jkgreen@sandia.gov -c bsd && [ -f debian/control ] && echo "Source: ovis-ldms
+set -x && mkdir -p ovis-ldms-debian-package && cd ovis-ldms-debian-package && export DEBEMAIL="jkgreen@sandia.gov" && export DEBFULLNAME="Jennifer K. Green" && echo "Cloning ovis" && git clone http://github.com/ovis-hpc/ovis.git -b v4.4.3 ovis-ldms-4.4.3 && tar cfJ ovis-ldms-4.4.3.tar.xz ovis-ldms-4.4.3 && cd ovis-ldms-4.4.3 && dh_make -i -y -f ../ovis-ldms-4.4.3.tar.xz -e jkgreen@sandia.gov -c bsd && [ -f debian/control ] && echo "Source: ovis-ldms
 Priority: optional
 Maintainer: Jennifer K. Green <jkgreen@sandia.gov>
 Build-Depends:
@@ -49,13 +49,5 @@ Depends:
  python3-dev [arm64],
  bash [arm64]
 Description: LDMS for SlingShot Switches
-" > \$PWD/debian/control && echo "13" > \$PWD/debian/compat && cat \$PWD/debian/control && echo "     Key-Type: DSA
-     Key-Length: 1024
-     Subkey-Type: ELG-E
-     Subkey-Length: 1024
-     Name-Real: Jennifer K. Green
-     Name-Email: jkgreen@sandia.gov
-     Expire-Date: 0
-     Passphrase: foobarbaz
-" >/tmp/gpgkeygen && [ -f /tmp/gpgkeygen ] && gpg --full-gen-key --batch /tmp/gpgkeygen && [ -f debian/rules ] && echo "Done with gpgkeygen" && echo -e "\\\tdh_auto_configure -- --disable-infiniband --disable-papi --disable-opa2 --disable-tx2mon --disable-static --disable-perf --disable-store --disable-flatfile --disable-csv --disable-lustre --disable-clock --disable-synthetic --disable-varset --disable-lnet_stats --disable-gpumetrics --disable-coretemp --disable-array_example --disable-hello_stream --disable-blob_stream --disable-procinterrupts --disable-procnet --disable-procnetdev --disable-procnfs --disable-dstat --disable-procstat --disable-llnl-edac --disable-tsampler --disable-cray_power_sampler --disable-loadavg --disable-vmstat --disable-procdiskstats --disable-spaceless_names --disable-generic_sampler --disable-jobinfo-sampler --disable-app-sampler --disable-readline --with-slurm=no --disable-ibnet --disable-timescale-store --enable-slingshot_switch" >>\$PWD/debian/rules && cat \$PWD/debian/rules && debuild -uc -us
+" > \$PWD/debian/control && echo "13" > \$PWD/debian/compat && echo -e "\\tdh_auto_configure -- --disable-infiniband --disable-papi --disable-opa2 --disable-tx2mon --disable-static --disable-perf --disable-store --disable-flatfile --disable-csv --disable-lustre --disable-clock --disable-synthetic --disable-varset --disable-lnet_stats --disable-gpumetrics --disable-coretemp --disable-array_example --disable-hello_stream --disable-blob_stream --disable-procinterrupts --disable-procnet --disable-procnetdev --disable-procnfs --disable-dstat --disable-procstat --disable-llnl-edac --disable-tsampler --disable-cray_power_sampler --disable-loadavg --disable-vmstat --disable-procdiskstats --disable-spaceless_names --disable-generic_sampler --disable-jobinfo-sampler --disable-app-sampler --disable-readline --with-slurm=no --disable-ibnet --disable-timescale-store --enable-slingshot_switch" >>\$PWD/debian/rules && cat \$PWD/debian/rules && debuild -uc -us
 EOF
