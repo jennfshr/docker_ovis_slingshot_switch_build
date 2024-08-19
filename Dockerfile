@@ -1,4 +1,4 @@
-FROM ubuntu-latest
+FROM arm64/ubuntu
 SHELL ["/bin/bash", "-c"]
 RUN apt update \
     && apt install -y \
