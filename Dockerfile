@@ -39,7 +39,8 @@ Build-Depends:
  make [arm64],
  git [arm64],
  pkg-config [arm64],
- python3-dev [arm64]
+ python3.12 [arm64],
+ python3.12-dev [arm64]
 Standards-Version: 4.1.3
 Homepage: https://github.com/ovis-hpc/ovis
 
@@ -58,5 +59,8 @@ Description: LDMS for SlingShot Switches
      Name-Email: jkgreen@sandia.gov
      Expire-Date: 0
      Passphrase: foobarbaz
-" >/tmp/gpgkeygen && [ -f /tmp/gpgkeygen ] && gpg --full-gen-key --batch /tmp/gpgkeygen && [ -f debian/rules ] && echo "Done with gpgkeygen" && echo -e "\\\tdh_auto_configure -- --disable-infiniband --disable-papi --disable-opa2 --disable-tx2mon --disable-static --disable-perf --disable-store --disable-flatfile --disable-csv --disable-lustre --disable-clock --disable-synthetic --disable-varset --disable-lnet_stats --disable-gpumetrics --disable-coretemp --disable-array_example --disable-hello_stream --disable-blob_stream --disable-procinterrupts --disable-procnet --disable-procnetdev --disable-procnfs --disable-dstat --disable-procstat --disable-llnl-edac --disable-tsampler --disable-cray_power_sampler --disable-loadavg --disable-vmstat --disable-procdiskstats --disable-spaceless_names --disable-generic_sampler --disable-jobinfo-sampler --disable-app-sampler --disable-readline --with-slurm=no --disable-ibnet --disable-timescale-store --enable-slingshot_switch" >>\$PWD/debian/rules && cat \$PWD/debian/rules && debuild -uc -us
+" >/tmp/gpgkeygen && [ -f /tmp/gpgkeygen ] && \
+  gpg --full-gen-key --batch /tmp/gpgkeygen && \
+  [ -f debian/rules ] && echo "Done with gpgkeygen" && \
+  echo -e "\\\tdh_auto_configure -- --disable-infiniband --disable-papi --disable-opa2 --disable-tx2mon --disable-static --disable-perf --disable-store --disable-flatfile --disable-csv --disable-lustre --disable-clock --disable-synthetic --disable-varset --disable-lnet_stats --disable-gpumetrics --disable-coretemp --disable-array_example --disable-hello_stream --disable-blob_stream --disable-procinterrupts --disable-procnet --disable-procnetdev --disable-procnfs --disable-dstat --disable-procstat --disable-llnl-edac --disable-tsampler --disable-cray_power_sampler --disable-loadavg --disable-vmstat --disable-procdiskstats --disable-spaceless_names --disable-generic_sampler --disable-jobinfo-sampler --disable-app-sampler --disable-readline --with-slurm=no --disable-ibnet --disable-timescale-store --enable-slingshot_switch" >>\$PWD/debian/rules && cat \$PWD/debian/rules && debuild -uc -us
 EOF
