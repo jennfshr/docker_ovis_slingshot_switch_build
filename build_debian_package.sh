@@ -7,7 +7,7 @@
 
 heredoc_dockerfile () {
 cat << DOCKERFILE >Dockerfile
-FROM docker.io/debian:buster
+FROM arm64v8/debian:latest
 SHELL ["/bin/bash", "-c"]
 RUN apt update \\
     && apt install -y \\
@@ -72,7 +72,7 @@ Depends:
  bash [arm64]
 Description: LDMS for SlingShot Switches
 " > \\\$PWD/debian/control && \
-echo "HERE >>>>" && \
+echo "13" > \\\$PWD/debian/compat && \
 cat \\\$PWD/debian/control && \
 echo "\
      Key-Type: DSA
@@ -139,16 +139,16 @@ DOCKERFILE
 #git clone https://github.com/jennfshr/docker_ovis_slingshot_switch_build.git &&
 #dh_install --autodest --sourcedir docker_ovis_slingshot_switch_build/gen_switch_config.sh
 #REGISTRY_URL="https://index.docker.io/v1/"
-read -s -p "Enter Docker Hub Username: " DOCKER_USERNAME
+read -p "Enter Docker Hub Username: " DOCKER_USERNAME
 echo ""
 read -s -p "Enter Docker Hub Password: " DOCKER_PASSWORD
 echo ""
 echo "$DOCKER_PASSWORD" | docker login $REGISTRY_URL -u ${DOCKER_USERNAME} --password-stdin
 unset DOCKER_PASSWORD
-read -s -p "Enter DEBFULLNAME: " DEBFULLNAME
+read -p "Enter DEBFULLNAME: " DEBFULLNAME
 DEBFULLNAME="${DEBFULLNAME}"
 echo ""
-read -s -p "Enter DEBEMAIL: " DEBEMAIL
+read -p "Enter DEBEMAIL: " DEBEMAIL
 #DEBEMAIL="\"$(echo $DEBEMAIL)\""
 echo ""
 read -s -p "Enter GPG Signing Passphrase to Use: " GPGPASS

@@ -36,12 +36,29 @@ jobs:
       with:
         platforms: 'arm64,arm'
 
-    - name: Execute build_debian_package.sh
-        run: build_debian_package.sh
-
     - name: Set up Docker Buildx      
       uses: crazy-max/ghaction-docker-buildx@v1      
       with:        
         version: latest  
-      # Runs a single command using the runners shell
 
+    - name: Prepare
+      if: success()
+      id: prepare
+      run: |
+        echo ::set-output name=docker_platform::${DOCKER_TARGET_PLATFORM}
+        echo ::set-output name=docker_image::${DOCKER_REGISTRY}/${DOCKER_IMAGE}
+        echo ::set-output name=version::${GITHUB_RUN_NUMBER}
+
+    - name: Docker Login
+        if: success()
+        run: |
+          echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
+
+    - name: Run Buildx (push image)
+        if: success()
+        run: |
+          docker buildx build \
+        --platform ${{ steps.prepare.outputs.docker_platform }} \
+        --tag ${{steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }} \
+        --file ./Dockerfile \
+        --output type=image,push=true .
