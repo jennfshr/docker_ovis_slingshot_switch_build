@@ -34,7 +34,7 @@ jobs:
 
     - uses: docker/setup-qemu-action@v2
       with:
-        platforms: 'arm64,arm'
+        platforms: 'arm64'
 
     - name: Set up Docker Buildx      
       uses: crazy-max/ghaction-docker-buildx@v1      
