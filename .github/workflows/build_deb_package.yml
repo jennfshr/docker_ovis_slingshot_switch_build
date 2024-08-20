@@ -60,17 +60,31 @@ jobs:
       run: |
         docker buildx build \
         --platform ${{ steps.prepare.outputs.docker_platform }} \
-        --tag ${{steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }} \
+        --tag ${{steps.prepare.outputs.docker_image }} \
         --file ./Dockerfile \
-        --output type=image,push=false .
+        --cache-to=type=gha \
+        --cache-from=type=gha .
+    
+    - name: archive deb package
+      if: success()
+      run: |
+        docker run \
+        --entrypoint tar \
+        ${{ steps.prepare.outputs.docker_platform }} \
+        cjf - ovis-ldms-debian-package > ovis.tar.xz
+        
+    - name: Get tarball
+      uses: actions/upload-artifact@v4
+      with:
+        name: ovis-ldms-debian-package
+        path: ovis.tar.xz
         
     - name: Collect debian package
       uses: actions/upload-artifact@v4
       with:
         name: ovis-ldms_4.4.3-1_arm64.deb
-        path: |
-          /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
-  
+        path: ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
+
   deploy:
     needs: build
     runs-on: ubuntu-20.04
@@ -92,5 +106,5 @@ jobs:
       run: |
         docker run \
         -v /ovis-ldms-debian-package:/packages:r \
-        --entrypoint dpkg ${{steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }} \
+        --entrypoint dpkg ${{steps.prepare.outputs.docker_image }} \
         -i /packages/ovis-ldms_4.4.3-1_arm64.deb
