@@ -26,6 +26,7 @@ mkdir -p ovis-ldms-debian-package && \
 cd ovis-ldms-debian-package && \
 export DEBEMAIL="jkgreen@sandia.gov" && \
 export DEBFULLNAME="Jennifer K. Green" && \
+export DEB_BUILD_OPTIONS='parallel=16' && \
 echo "Cloning ovis" && \
 git clone http://github.com/ovis-hpc/ovis.git -b v4.4.3 ovis-ldms-4.4.3 && \
 tar cfJ ovis-ldms-4.4.3.tar.xz ovis-ldms-4.4.3 && \
