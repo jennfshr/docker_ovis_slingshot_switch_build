@@ -87,7 +87,7 @@ jobs:
         path: ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
 
   deploy:
-    runs_on: ubuntu-20.04
+    runs-on: ubuntu-20.04
     needs: build
     steps:
     - name: Download Debian Package
@@ -97,7 +97,7 @@ jobs:
         path: /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
   
   tarball:
-    runs_on: ubuntu-20.04
+    runs-on: ubuntu-20.04
     needs: build
     steps:
     - name: Install LDMS
