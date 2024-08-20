@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:      
       DOCKER_REGISTRY: docker.io
-      DOCKER_IMAGE: jgreen76/ldms-slingshot-sampler
+      DOCKER_IMAGE: jkgreen76/ldms-slingshot-sampler
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       DOCKER_TARGET_PLATFORM: linux/arm64
@@ -63,7 +63,8 @@ jobs:
         --tag ${{steps.prepare.outputs.docker_image }} \
         --file ./Dockerfile \
         --cache-to=type=gha \
-        --cache-from=type=gha .
+        --cache-from=type=gha \
+        --output type=image,push=true .
     
     - name: archive deb package
       if: success()
@@ -86,15 +87,18 @@ jobs:
         path: ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
 
   deploy:
+    runs_on: jkgreen76/ldms-slingshot-sampler
     needs: build
-    runs_on: jgreen76/ldms-slingshot-sampler
     steps:
     - name: Download Debian Package
       uses: actions/download-artifact@master
       with:
         name: ovis-ldms_4.4.3-1_arm64.deb
         path: /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
-
+  
+  tarball:
+    runs_on: jkgreen76/ldms-slingshot-sampler
+    needs: build
     - name: Install LDMS    
       run: |
         docker run \
