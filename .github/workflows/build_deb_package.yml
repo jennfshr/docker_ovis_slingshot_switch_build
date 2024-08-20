@@ -72,6 +72,7 @@ jobs:
           /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
   
   deploy:
+    needs: build
     runs-on: ubuntu-20.04
     env:      
       DOCKER_REGISTRY: docker.io
