@@ -87,6 +87,7 @@ jobs:
 
   deploy:
     needs: build
+    runs_on: jgreen76/ldms-slingshot-sampler
     steps:
     - name: Download Debian Package
       uses: actions/download-artifact@master
