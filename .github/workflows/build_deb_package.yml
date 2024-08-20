@@ -60,7 +60,7 @@ jobs:
       run: |
         docker buildx build \
         --platform ${{ steps.prepare.outputs.docker_platform }} \
-        --tag ${{steps.prepare.outputs.docker_image }} \
+        --tag ${{ steps.prepare.outputs.docker_image }} \
         --file ./Dockerfile \
         --cache-to=type=gha \
         --cache-from=type=gha \
@@ -69,10 +69,11 @@ jobs:
     - name: archive deb package
       if: success()
       run: |
+        docker pull ${{ steps.prepare.outputs.docker_image }} \
         docker run \
         --entrypoint tar \
         ${{ steps.prepare.outputs.docker_image }} \
-        cjf - ovis-ldms-debian-package > ovis.tar.xz
+        cjf - ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb > ovis.tar.xz
         
     - name: Get tarball
       uses: actions/upload-artifact@v4
