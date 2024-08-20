@@ -21,7 +21,18 @@ RUN apt update \
        python3-dev \
        vim
 RUN bash <<EOF
-set -x && mkdir -p ovis-ldms-debian-package && cd ovis-ldms-debian-package && export DEBEMAIL="jkgreen@sandia.gov" && export DEBFULLNAME="Jennifer K. Green" && echo "Cloning ovis" && git clone http://github.com/ovis-hpc/ovis.git -b v4.4.3 ovis-ldms-4.4.3 && tar cfJ ovis-ldms-4.4.3.tar.xz ovis-ldms-4.4.3 && cd ovis-ldms-4.4.3 && dh_make -i -y -f ../ovis-ldms-4.4.3.tar.xz -e jkgreen@sandia.gov -c bsd && [ -f debian/control ] && echo "Source: ovis-ldms
+set -x && \
+mkdir -p ovis-ldms-debian-package && \
+cd ovis-ldms-debian-package && \
+export DEBEMAIL="jkgreen@sandia.gov" && \
+export DEBFULLNAME="Jennifer K. Green" && \
+echo "Cloning ovis" && \
+git clone http://github.com/ovis-hpc/ovis.git -b v4.4.3 ovis-ldms-4.4.3 && \
+tar cfJ ovis-ldms-4.4.3.tar.xz ovis-ldms-4.4.3 && \
+cd ovis-ldms-4.4.3 && \
+dh_make -i -y -f ../ovis-ldms-4.4.3.tar.xz -e jkgreen@sandia.gov -c bsd && \
+[ -f debian/control ] && \
+echo "Source: ovis-ldms
 Priority: optional
 Maintainer: Jennifer K. Green <jkgreen@sandia.gov>
 Build-Depends:
