@@ -55,11 +55,17 @@ jobs:
       run: |
         echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
 
-    - name: Run Buildx (push image)
+    - name: Run Buildx
       if: success()
       run: |
         docker buildx build \
         --platform ${{ steps.prepare.outputs.docker_platform }} \
         --tag ${{steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }} \
         --file ./Dockerfile \
-        --output type=image,push=true .
+        --output type=image,push=false .
+
+      - name: Collect debian package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ovis-ldms_4.4.3-1_arm64.deb
+          path: ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
