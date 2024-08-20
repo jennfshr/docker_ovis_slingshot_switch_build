@@ -87,7 +87,7 @@ jobs:
       name: ovis-ldms_4.4.3-1_arm64.deb
       path: /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
     run: |
-    docker run \
+      docker run \
       -v /ovis-ldms-debian-package:/packages:r \
       --entrypoint dpkg ${{steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }} \
       -i /packages/ovis-ldms_4.4.3-1_arm64.deb
