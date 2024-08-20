@@ -81,11 +81,13 @@ jobs:
       DOCKER_TARGET_PLATFORM: linux/arm64
 
     steps:
-    - name: Install Debian Package
+    - name: Download Debian Package
       uses: actions/download-artifact@master
       with:
         name: ovis-ldms_4.4.3-1_arm64.deb
         path: /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
+
+    - name: Install LDMS    
       run: |
         docker run \
         -v /ovis-ldms-debian-package:/packages:r \
