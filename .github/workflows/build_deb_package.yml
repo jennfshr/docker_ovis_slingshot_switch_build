@@ -64,8 +64,8 @@ jobs:
         --file ./Dockerfile \
         --output type=image,push=false .
 
-      - name: Collect debian package
-        uses: actions/upload-artifact@v4
-        with:
-          name: ovis-ldms_4.4.3-1_arm64.deb
-          path: ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
+    - name: Collect debian package
+      uses: actions/upload-artifact@v4
+      with:
+        name: ovis-ldms_4.4.3-1_arm64.deb
+        path: ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
