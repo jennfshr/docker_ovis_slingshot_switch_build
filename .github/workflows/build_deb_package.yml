@@ -87,14 +87,6 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-20.04
-    env:      
-      DOCKER_REGISTRY: docker.io
-      DOCKER_IMAGE: jgreen76/ldms-slingshot-sampler
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      DOCKER_TARGET_PLATFORM: linux/arm64
-
     steps:
     - name: Download Debian Package
       uses: actions/download-artifact@master
