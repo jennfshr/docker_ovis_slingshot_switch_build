@@ -2,7 +2,7 @@
 
 name: Package OVIS-LDMS SlingShot Switch Sampler for Debian ARM64
 
-# Controls when the workflow will run
+# Controls when the workflow will run 
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
@@ -18,13 +18,13 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: arm64v8/debian:latest
+    runs-on: ubuntu-latest
     env:      
       DOCKER_REGISTRY: docker.io
-      DOCKER_IMAGE: arm64v8/debian:latest
+      DOCKER_IMAGE: ubuntu
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      DOCKER_TARGET_PLATFORM: linux/arm/v7
+      DOCKER_TARGET_PLATFORM: linux/arm64
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -32,10 +32,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v1
 
-    - uses: docker/setup-qemu-action@v2
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
       with:
-        platforms: 'arm64,arm'
-
+        platforms: 'linux/arm64'
+        
     - name: Set up Docker Buildx      
       uses: crazy-max/ghaction-docker-buildx@v1      
       with:        
@@ -50,14 +51,14 @@ jobs:
         echo ::set-output name=version::${GITHUB_RUN_NUMBER}
 
     - name: Docker Login
-        if: success()
-        run: |
-          echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
+      if: success()
+      run: |
+        echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
 
     - name: Run Buildx (push image)
-        if: success()
-        run: |
-          docker buildx build \
+      if: success()
+      run: |
+        docker buildx build \
         --platform ${{ steps.prepare.outputs.docker_platform }} \
         --tag ${{steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }} \
         --file ./Dockerfile \
