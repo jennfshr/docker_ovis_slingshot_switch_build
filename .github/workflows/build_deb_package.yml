@@ -99,7 +99,8 @@ jobs:
   tarball:
     runs_on: jkgreen76/ldms-slingshot-sampler
     needs: build
-    - name: Install LDMS    
+    steps:
+    - name: Install LDMS
       run: |
         docker run \
         -v /ovis-ldms-debian-package:/packages:r \
