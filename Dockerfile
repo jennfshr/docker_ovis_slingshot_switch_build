@@ -1,4 +1,5 @@
-FROM arm64v8/debian:latest
+FROM --platform=linux/arm64 ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 RUN apt update \
     && apt install -y \
@@ -16,6 +17,7 @@ RUN apt update \
        make \
        git \
        pkg-config \
+       python3 \
        python3-dev \
        vim
 RUN bash <<EOF
@@ -38,7 +40,8 @@ Build-Depends:
  make [arm64],
  git [arm64],
  pkg-config [arm64],
- python3-dev [arm64]
+ python3 [arm64],
+ python3-dev [arm64],
 Standards-Version: 4.1.3
 Homepage: https://github.com/ovis-hpc/ovis
 
@@ -49,5 +52,9 @@ Depends:
  python3-dev [arm64],
  bash [arm64]
 Description: LDMS for SlingShot Switches
-" > \$PWD/debian/control && echo "13" > \$PWD/debian/compat && echo -e "\\tdh_auto_configure -- --disable-infiniband --disable-papi --disable-opa2 --disable-tx2mon --disable-static --disable-perf --disable-store --disable-flatfile --disable-csv --disable-lustre --disable-clock --disable-synthetic --disable-varset --disable-lnet_stats --disable-gpumetrics --disable-coretemp --disable-array_example --disable-hello_stream --disable-blob_stream --disable-procinterrupts --disable-procnet --disable-procnetdev --disable-procnfs --disable-dstat --disable-procstat --disable-llnl-edac --disable-tsampler --disable-cray_power_sampler --disable-loadavg --disable-vmstat --disable-procdiskstats --disable-spaceless_names --disable-generic_sampler --disable-jobinfo-sampler --disable-app-sampler --disable-readline --with-slurm=no --disable-ibnet --disable-timescale-store --enable-slingshot_switch" >>\$PWD/debian/rules && cat \$PWD/debian/rules && debuild -uc -us
+" > \$PWD/debian/control && \
+cat \$PWD/debian/control && \
+echo "13" > \$PWD/debian/compat \
+&& echo -e "\\tdh_auto_configure -- --disable-infiniband --disable-papi --disable-opa2 --disable-tx2mon --disable-static --disable-perf --disable-store --disable-flatfile --disable-csv --disable-lustre --disable-clock --disable-synthetic --disable-varset --disable-lnet_stats --disable-gpumetrics --disable-coretemp --disable-array_example --disable-hello_stream --disable-blob_stream --disable-procinterrupts --disable-procnet --disable-procnetdev --disable-procnfs --disable-dstat --disable-procstat --disable-llnl-edac --disable-tsampler --disable-cray_power_sampler --disable-loadavg --disable-vmstat --disable-procdiskstats --disable-spaceless_names --disable-generic_sampler --disable-jobinfo-sampler --disable-app-sampler --disable-readline --with-slurm=no --disable-ibnet --disable-timescale-store --enable-slingshot_switch" >>\$PWD/debian/rules && \
+cat \$PWD/debian/rules && debuild -uc -us
 EOF
