@@ -22,6 +22,7 @@ jobs:
       DOCKER_IMAGE: jkgreen76/ldms-slingshot-sampler
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+ 
  #     DOCKER_TARGET_PLATFORM: 'linux/arm64'
 
     # Steps represent a sequence of tasks that will be executed as part of the job
