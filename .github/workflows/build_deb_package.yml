@@ -1,4 +1,4 @@
-# This is a basic workflow to help you get started with Actions
+e# This is a basic workflow to help you get started with Actions
 
 name: Package OVIS-LDMS SlingShot Switch Sampler for Debian ARM64
 
@@ -55,20 +55,33 @@ jobs:
       run: |
         echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
 
-    - name: Run Buildx
+    - name: Build Debian Package
       if: success()
       run: |
         docker buildx build \
         --platform ${{ steps.prepare.outputs.docker_platform }} \
         --tag ${{ steps.prepare.outputs.docker_image }} \
         --file ./Dockerfile \
-        --cache-to=type=gha \
-        --cache-from=type=gha \
-        --output "type=local,." \
-        --output "type=tar,." \
-        --output "type=image,push=true" \
-        --load .
-    
+        --output "type=image,push=true" .
+
+    - name: Stage artifacts to bindmount
+      run: |
+        mkdir -p ldms-slingshot-sampler
+        sudo chmod -R 777 $(pwd)/ldms-slingshot-sampler
+        docker run -i -u 1000 -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${{ steps.prepare.outputs.docker_image }} cp /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-sampler/.
+        
+    - name: list directory contents of ldms-slingshot-sampler
+      continue-on-error: true
+      run: |
+        ls -al ldms-slingshot-sampler
+
+    - name: Upload artifact
+      continue-on-error: true
+      uses: actions/upload-pages-artifact@v2
+      with:
+        name: ldms-slingshot-sampler
+        path: ldms-slingshot-sampler
+
 #    - name: archive deb package
 #      if: success()
 #      run: |
