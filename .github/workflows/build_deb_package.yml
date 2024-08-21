@@ -65,8 +65,8 @@ jobs:
       run: |
         mkdir -p ldms-slingshot-sampler
         sudo chmod -R 777 $(pwd)/ldms-slingshot-sampler
-        docker run -i \
         export DOCKER_DEFAULT_PLATFORM=linux/arm64 \
+        docker run -i \
         -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${DOCKER_IMAGE} \
         cp /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-sampler/.
         
