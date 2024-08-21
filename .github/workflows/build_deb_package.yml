@@ -65,7 +65,7 @@ jobs:
         --cache-to=type=gha \
         --cache-from=type=gha \
         --output type=local,. \
-        --output type=tar, . \
+        --output type=tar,. \
         --output type=image, push=true \
         --load .
     
