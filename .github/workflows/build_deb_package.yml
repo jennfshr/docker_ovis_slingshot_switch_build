@@ -58,6 +58,8 @@ jobs:
         docker buildx build \
         --platform ${{ steps.prepare.outputs.docker_platform }} \
         --tag ${{ steps.prepare.outputs.docker_image }} \
+        --provenance false \
+        --sbom false \
         --file ./Dockerfile \
         --output "type=image,push=true" .
             
@@ -65,7 +67,6 @@ jobs:
       run: |
         mkdir -p ldms-slingshot-sampler
         sudo chmod -R 777 $(pwd)/ldms-slingshot-sampler
-        export DOCKER_DEFAULT_PLATFORM=linux/arm64 \
         docker run -i \
         -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${DOCKER_IMAGE} \
         cp /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-sampler/.
