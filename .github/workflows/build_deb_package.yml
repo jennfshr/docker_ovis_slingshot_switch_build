@@ -1,10 +1,7 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Package OVIS-LDMS SlingShot Switch Sampler for Debian ARM64
 
 # Controls when the workflow will run 
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "debian" ]
   pull_request:
@@ -18,19 +15,19 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:      
       DOCKER_REGISTRY: docker.io
-      DOCKER_IMAGE: ubuntu
+      DOCKER_IMAGE: jkgreen76/ldms-slingshot-sampler
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      DOCKER_TARGET_PLATFORM: linux/arm64
+      DOCKER_TARGET_PLATFORM: 'linux/arm64'
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout code
-      uses: actions/checkout@v1
+      uses: actions/checkout@v4
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
@@ -38,7 +35,7 @@ jobs:
         platforms: 'linux/arm64'
         
     - name: Set up Docker Buildx      
-      uses: crazy-max/ghaction-docker-buildx@v1      
+      uses: docker/setup-buildx-action@v3    
       with:        
         version: latest  
 
@@ -46,20 +43,83 @@ jobs:
       if: success()
       id: prepare
       run: |
-        echo ::set-output name=docker_platform::${DOCKER_TARGET_PLATFORM}
         echo ::set-output name=docker_image::${DOCKER_REGISTRY}/${DOCKER_IMAGE}
         echo ::set-output name=version::${GITHUB_RUN_NUMBER}
+        echo ::set-output name=docker_platform::${DOCKER_TARGET_PLATFORM}
 
     - name: Docker Login
       if: success()
       run: |
         echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
 
-    - name: Run Buildx (push image)
+    - name: Build Debian Package
       if: success()
       run: |
         docker buildx build \
         --platform ${{ steps.prepare.outputs.docker_platform }} \
-        --tag ${{steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }} \
+        --tag ${{ steps.prepare.outputs.docker_image }} \
+        --provenance false \
+        --sbom false \
         --file ./Dockerfile \
-        --output type=image,push=true .
+        --output "type=image,push=true" .
+            
+    - name: Stage artifacts to bindmount
+      run: |
+        mkdir -p ldms-slingshot-sampler
+        sudo chmod -R 777 $(pwd)/ldms-slingshot-sampler
+        docker run -i \
+        -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${DOCKER_IMAGE} \
+        cp /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-sampler/.
+        
+    - name: list directory contents of ldms-slingshot-sampler
+      continue-on-error: true
+      run: |
+        ls -al ldms-slingshot-sampler
+
+    - name: Upload artifact
+      continue-on-error: true
+      uses: actions/upload-pages-artifact@v2
+      with:
+        name: ldms-slingshot-sampler
+        path: ldms-slingshot-sampler
+
+#    - name: archive deb package
+#      if: success()
+#      run: |
+#        docker pull ${{ steps.prepare.outputs.docker_image }}
+#        docker run --entrypoint tar \
+#        jkgreen76/ldms-slingshot-sampler \
+#        cjf - ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb > ovis.tar.xz
+        
+#    - name: Get tarball
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: ovis-ldms-debian-package
+#        path: ovis.tar.xz
+        
+#    - name: Collect debian package
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: ovis-ldms_4.4.3-1_arm64.deb
+#        path: ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
+
+#  deploy:
+#    runs-on: ubuntu-20.04
+#    needs: build
+#    steps:
+#    - name: Download Debian Package
+#      uses: actions/download-artifact@master
+#     with:
+#        name: ovis-ldms_4.4.3-1_arm64.deb
+#        path: /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
+  
+#  tarball:
+#    runs-on: ubuntu-20.04
+#    needs: build
+#    steps:
+#    - name: Install LDMS
+#      run: |
+#        docker run \
+#        -v /ovis-ldms-debian-package:/packages:r \
+#        --entrypoint dpkg ${{steps.prepare.outputs.docker_image }} \
+#        -i /packages/ovis-ldms_4.4.3-1_arm64.deb
