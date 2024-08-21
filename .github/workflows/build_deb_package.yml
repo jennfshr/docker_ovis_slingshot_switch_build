@@ -69,9 +69,8 @@ jobs:
     - name: archive deb package
       if: success()
       run: |
-        docker pull ${{ steps.prepare.outputs.docker_image }} \
-        docker run \
-        --entrypoint tar \
+        docker pull ${{ steps.prepare.outputs.docker_image }}
+        docker run --entrypoint tar \
         ${{ steps.prepare.outputs.docker_image }} \
         cjf - ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb > ovis.tar.xz
         
