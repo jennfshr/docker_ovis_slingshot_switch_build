@@ -64,45 +64,48 @@ jobs:
         --file ./Dockerfile \
         --cache-to=type=gha \
         --cache-from=type=gha \
-        --output type=image,push=true .
+        --output type=local,. \
+        --output type=tar, . \
+        --output type=image, push=true \
+        --load .
     
-    - name: archive deb package
-      if: success()
-      run: |
-        docker pull ${{ steps.prepare.outputs.docker_image }}
-        docker run --entrypoint tar \
-        ${{ steps.prepare.outputs.docker_image }} \
-        cjf - ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb > ovis.tar.xz
+#    - name: archive deb package
+#      if: success()
+#      run: |
+#        docker pull ${{ steps.prepare.outputs.docker_image }}
+#        docker run --entrypoint tar \
+#        jkgreen76/ldms-slingshot-sampler \
+#        cjf - ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb > ovis.tar.xz
         
-    - name: Get tarball
-      uses: actions/upload-artifact@v4
-      with:
-        name: ovis-ldms-debian-package
-        path: ovis.tar.xz
+#    - name: Get tarball
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: ovis-ldms-debian-package
+#        path: ovis.tar.xz
         
-    - name: Collect debian package
-      uses: actions/upload-artifact@v4
-      with:
-        name: ovis-ldms_4.4.3-1_arm64.deb
-        path: ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
+#    - name: Collect debian package
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: ovis-ldms_4.4.3-1_arm64.deb
+#        path: ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
 
-  deploy:
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-    - name: Download Debian Package
-      uses: actions/download-artifact@master
-      with:
-        name: ovis-ldms_4.4.3-1_arm64.deb
-        path: /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
+#  deploy:
+#    runs-on: ubuntu-20.04
+#    needs: build
+#    steps:
+#    - name: Download Debian Package
+#      uses: actions/download-artifact@master
+#     with:
+#        name: ovis-ldms_4.4.3-1_arm64.deb
+#        path: /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb
   
-  tarball:
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-    - name: Install LDMS
-      run: |
-        docker run \
-        -v /ovis-ldms-debian-package:/packages:r \
-        --entrypoint dpkg ${{steps.prepare.outputs.docker_image }} \
-        -i /packages/ovis-ldms_4.4.3-1_arm64.deb
+#  tarball:
+#    runs-on: ubuntu-20.04
+#    needs: build
+#    steps:
+#    - name: Install LDMS
+#      run: |
+#        docker run \
+#        -v /ovis-ldms-debian-package:/packages:r \
+#        --entrypoint dpkg ${{steps.prepare.outputs.docker_image }} \
+#        -i /packages/ovis-ldms_4.4.3-1_arm64.deb
