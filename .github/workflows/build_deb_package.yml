@@ -64,9 +64,9 @@ jobs:
         --file ./Dockerfile \
         --cache-to=type=gha \
         --cache-from=type=gha \
-        --output type=local,. \
-        --output type=tar,. \
-        --output type=image, push=true \
+        --output "type=local,." \
+        --output "type=tar,." \
+        --output "type=image,push=true" \
         --load .
     
 #    - name: archive deb package
