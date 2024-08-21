@@ -22,8 +22,7 @@ jobs:
       DOCKER_IMAGE: jkgreen76/ldms-slingshot-sampler
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
- 
- #     DOCKER_TARGET_PLATFORM: 'linux/arm64'
+      DOCKER_TARGET_PLATFORM: 'linux/arm64'
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -47,8 +46,8 @@ jobs:
       run: |
         echo ::set-output name=docker_image::${DOCKER_REGISTRY}/${DOCKER_IMAGE}
         echo ::set-output name=version::${GITHUB_RUN_NUMBER}
+        echo ::set-output name=docker_platform::${DOCKER_TARGET_PLATFORM}
 
-#       echo ::set-output name=docker_platform::${DOCKER_TARGET_PLATFORM}
     - name: Docker Login
       if: success()
       run: |
@@ -58,11 +57,11 @@ jobs:
       if: success()
       run: |
         docker buildx build \
+        --platform ${{ steps.prepare.outputs.docker_platform }} \
         --tag ${{ steps.prepare.outputs.docker_image }} \
         --file ./Dockerfile \
         --output "type=image,push=true" .
-#    --platform ${{ steps.prepare.outputs.docker_platform }} \
-    
+            
     - name: Stage artifacts to bindmount
       run: |
         mkdir -p ldms-slingshot-sampler
