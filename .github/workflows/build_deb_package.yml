@@ -66,7 +66,9 @@ jobs:
       run: |
         mkdir -p ldms-slingshot-sampler
         sudo chmod -R 777 $(pwd)/ldms-slingshot-sampler
-        docker run -i -u 1000 -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${{ steps.prepare.outputs.docker_image }} cp /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-sampler/.
+        docker run -i \
+        -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${DOCKER_IMAGE} \
+        cp /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-sampler/.
         
     - name: list directory contents of ldms-slingshot-sampler
       continue-on-error: true
