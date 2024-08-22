@@ -1,4 +1,4 @@
-name: Package OVIS-LDMS SlingShot Switch Sampler for Debian ARM64 foo
+name: Package OVIS-LDMS SlingShot Switch Sampler for Debian ARM64
 
 on:
   push:
