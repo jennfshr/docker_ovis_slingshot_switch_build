@@ -17,9 +17,11 @@ jobs:
       DOCKER_IMAGE: jkgreen76/ldms-slingshot-sampler
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      GPGPASS: ${{ secrets.GPGPASS }}
-      GPGUSER: ${{ secrets.GPGUSER }}
-      GPGEMAIL: ${{ secrets.GPGEMAIL }}
+      GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
+      GPG_EMAIL: ${{ secrets.GPG_EMAIL }}
+      GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+      GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       DOCKER_TARGET_PLATFORM: 'linux/arm64'
 
     steps:
@@ -71,48 +73,83 @@ jobs:
         docker run -i \
         -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${DOCKER_IMAGE} \
         cp -Rf /ovis-ldms-debian-package/* /ldms-slingshot-sampler/.
+        echo "### Artifacts staged to bindmount :white_check_mark:" >> $GITHUB_STEP_SUMMARY
   
     - name: list directory contents of ldms-slingshot-sampler
       if: success()
       run: |
         ls -al ldms-slingshot-sampler
         
-    - name: list directory contents of ldms-slingshot-sampler
-      if: success()
-      run: |
-        ls -al ldms-slingshot-sampler
+    - name: 🔍 Check for dependencies
+      run: command -v apt-ftparchive || sudo apt install apt-utils
+        
     - name: Create APT repo
       if: success()
       run: |
-        mkdir -p ldms-slingshot-sampler/apt-repo/pool/main/
-        cp ldms-slingshot-sampler/ovis-ldms_4.4.3-1_arm64.deb ldms-slingshot-sampler/apt-repo/pool/main/.     
-        mkdir -p ldms-slingshot-sampler/apt-repo/dists/stable/main/binary-arm64
-        cd ldms-slingshot-sampler/apt-repo
+        set -e
+        do_hash() {
+        HASH_NAME=$1
+        HASH_CMD=$2
+        echo "${HASH_NAME}:"
+        for f in $(find -type f); do
+          f=$(echo $f | cut -c3-) # remove ./ prefix
+          if [ "$f" = "Release" ]; then
+              continue
+          fi
+          echo " $(${HASH_CMD} ${f}  | cut -d" " -f1) $(wc -c $f)"
+        done
+        }
+        mkdir -p /ovis-ldms/apt-repo/dists/stable/main/binary-arm64
+        mkdir -p /ovis-ldms/apt-repo/pool/main
+        cp /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ovis-ldms/apt-repo/pool/main/.
+        cd /ovis-ldms/apt-repo
         dpkg-scanpackages --arch arm64 pool/ > dists/stable/main/binary-arm64/Packages
         cat dists/stable/main/binary-arm64/Packages | gzip -9 > dists/stable/main/binary-arm64/Packages.gz
-        cat dists/stable/main/binary-arm64/Packages
-< todo start from here >
-    - name: 🔍 Check for dependencies
-      run: command -v zstd || sudo apt install zstd
+        cd /ovis-ldms/apt-repo/dists/stable
+        cat << EOF > Release
+        Architectures: arm64
+        Components: main
+        Date: $(date -Ru)
+        Version: 4.4.3-1
+        Suite: stable
+        EOF
+        do_hash "MD5Sum" "md5sum" >> Release
+        do_hash "SHA1" "sha1sum" >> Release
+        do_hash "SHA256" "sha256sum" >> Release
+        cat Release
+        echo "### APT Repo Creation Successful :white_check_mark:" >> $GITHUB_STEP_SUMMARY
         
-    - name: 📝 Create Packages
-      run: apt-ftparchive packages ./debs > Packages
+    - name: Import GPG key
+        if: success()
+        run: |
+          echo ${GPG_PRIVATE_KEY} | gpg --import
+          cat /ovis-ldms/apt-repo/dists/stable/Release | gpg --default-key ${GPG_USERNAME} -abs > /ovis-ldms/apt-repo/dists/stable/Release.gpg
+          cat /ovis-ldms/apt-repo/dists/stable/Release | gpg --default-key ${GPG_USERNAME} -abs --clearsign > /ovis-ldms/apt-repo/dists/stable/InRelease
+          echo "### GPG Keys imported and ovis-ldms apt-repo signed :white_check_mark:" >> $GITHUB_STEP_SUMMARY  
     
-    - name: 📝 Create Packages.bz2 from Packages
-      run: bzip2 -c9 Packages > Packages.bz2
-    
-    - name: 📝 Create Packages.xz from Packages
-      run: xz -c9 Packages > Packages.xz
-    
-    - name: 📝 Create Packages.lzma from Packages
-      run: xz -5fkev --format=lzma Packages > Packages.lzma
-    
-    - name: 📝 Create Packages.gz from Packages
-      run: gzip -c9 Packages > Packages.gz
-    
-    - name: 📝 Create Packages.zstd from Packages
-        run: zstd -c19 Packages > Packages.zst
-    
+    - name: Build Test Server
+      if: success()
+      run: |
+        docker buildx build \
+        --platform ${{ steps.prepare.outputs.docker_platform }} \
+        --tag arm64-ubuntu-apt-webserver \
+        --provenance false \
+        --sbom false \
+        --file ./test-apt-server/Dockerfile \
+        --output "type=image,push=true" .
+        echo "### ubuntu-arm64-apt-webserver created! :white_check_mark:" >> $GITHUB_STEP_SUMMARY
+
+#    - name: Start Webserver  
+#      if: success()
+#      users: hoverkraft-tech/compose-action@v2.0.1
+#        command -v python3 || apt-get update && apt-get install -y python3
+#        mkdir /www
+#        cp -Rf /ovis-ldms/apt-repo /www/apt-repo
+#        python3 -m "http.server"
+          
+
+#    - name: Test APT repo
+            
     - name: Upload artifact
       if: success()
       uses: actions/upload-pages-artifact@v4
