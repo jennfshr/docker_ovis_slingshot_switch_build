@@ -24,7 +24,7 @@ jobs:
       DOCKER_IMAGE: ubuntu
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      DOCKER_TARGET_PLATFORM: linux/arm64
+      DOCKER_TARGET_PLATFORM: linux/arm64/v3
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
