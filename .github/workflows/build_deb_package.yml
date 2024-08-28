@@ -123,9 +123,8 @@ jobs:
         }
         mkdir -p ovis-ldms/apt-repo/dists/stable/main/binary-arm64
         mkdir -p ovis-ldms/apt-repo/pool/main
-        ls -al /
-        find / -name "ovis-ldms_4.4.3-1_arm64.deb"
-        cp /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb ovis-ldms/apt-repo/pool/main/.
+        [ -f /home/runner/work/docker_ovis_slingshot_switch_build/docker_ovis_slingshot_switch_build/ldms-slingshot-sampler/ovis-ldms_4.4.3-1_arm64.deb ]
+        cp /home/runner/work/docker_ovis_slingshot_switch_build/docker_ovis_slingshot_switch_build/ldms-slingshot-sampler/ovis-ldms_4.4.3-1_arm64.deb ovis-ldms/apt-repo/pool/main/.
         cd ovis-ldms/apt-repo
         dpkg-scanpackages --arch arm64 pool/ > dists/stable/main/binary-arm64/Packages
         cat dists/stable/main/binary-arm64/Packages | gzip -9 > dists/stable/main/binary-arm64/Packages.gz
