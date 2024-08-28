@@ -121,13 +121,13 @@ jobs:
           echo " $(${HASH_CMD} ${f}  | cut -d" " -f1) $(wc -c $f)"
         done
         }
-        mkdir -p /ovis-ldms/apt-repo/dists/stable/main/binary-arm64
-        mkdir -p /ovis-ldms/apt-repo/pool/main
-        cp /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ovis-ldms/apt-repo/pool/main/.
-        cd /ovis-ldms/apt-repo
+        mkdir -p ovis-ldms/apt-repo/dists/stable/main/binary-arm64
+        mkdir -p ovis-ldms/apt-repo/pool/main
+        cp ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb ovis-ldms/apt-repo/pool/main/.
+        cd ovis-ldms/apt-repo
         dpkg-scanpackages --arch arm64 pool/ > dists/stable/main/binary-arm64/Packages
         cat dists/stable/main/binary-arm64/Packages | gzip -9 > dists/stable/main/binary-arm64/Packages.gz
-        cd /ovis-ldms/apt-repo/dists/stable
+        cd dists/stable
         cat << EOF > Release
         Architectures: arm64
         Components: main
