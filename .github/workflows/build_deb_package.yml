@@ -174,7 +174,7 @@ jobs:
             
     - name: Upload artifact
       if: success()
-      uses: actions/upload-pages-artifact@v4
+      uses: actions/upload-pages-artifact@v3.0.1
       with:
         name: ldms-slingshot-sampler
         path: ldms-slingshot-sampler
