@@ -94,7 +94,7 @@ jobs:
         sudo chmod -R 777 $(pwd)/ldms-slingshot-sampler
         docker run -i \
         -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${DOCKER_IMAGE} \
-        cp -Rf /ovis-ldms-debian-package/* /ldms-slingshot-sampler/.
+        cp -Rf /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-sampler/.
         echo "### Artifacts staged to bindmount :white_check_mark:" >> $GITHUB_STEP_SUMMARY
   
     - name: list directory contents of ldms-slingshot-sampler
