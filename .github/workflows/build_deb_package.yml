@@ -67,13 +67,13 @@ jobs:
         echo "docker_image=${DOCKER_REGISTRY}/${DOCKER_IMAGE}" >> "$GITHUB_OUTPUT"
         echo "buildx_version=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
         echo "docker_platform=${DOCKER_TARGET_PLATFORM}" >> "$GITHUB_OUTPUT"
-        echo "### Prepare Step Successful :white_check_mark:" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: ### Prepare Step Successful" >> $GITHUB_STEP_SUMMARY
 
     - name: Docker Login
       if: success()
       run: |
         echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
-        echo "### Docker Login Successful :white_check_mark:" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: ### Docker Login Successful" >> $GITHUB_STEP_SUMMARY
 
     - name: Build Debian Package
       if: success()
@@ -85,7 +85,7 @@ jobs:
         --sbom false \
         --file ./Dockerfile \
         --output "type=image,push=true" .
-        echo "### ovis-ldms_4.4.3-1_arm.deb created! :white_check_mark:" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: ### ovis-ldms_4.4.3-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
  
     - name: Stage artifacts to bindmount
       if: success()
@@ -95,7 +95,7 @@ jobs:
         docker run -i \
         -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${DOCKER_IMAGE} \
         cp -Rf /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-sampler/.
-        echo "### Artifacts staged to bindmount :white_check_mark:" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark:### Artifacts staged to bindmount" >> $GITHUB_STEP_SUMMARY
   
     - name: list directory contents of ldms-slingshot-sampler
       if: success()
@@ -140,13 +140,14 @@ jobs:
         do_hash "SHA1" "sha1sum" >> Release
         do_hash "SHA256" "sha256sum" >> Release
         cat Release
-        echo "### APT Repo Creation Successful :white_check_mark:" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: ### APT Repo Creation Successful" >> $GITHUB_STEP_SUMMARY
         
     - name: Import GPG key
       if: success()
       run: |
-        echo ${GPG_PUBLIC_KEY} > ~/.gpg/public.key
-        echo ${GPG_PRIVATE_KEY} > ~/.gpg/private.key
+        mkdir -p ~/.gnupg
+        echo ${GPG_PUBLIC_KEY} > ~/.gnupg/public.key
+        echo ${GPG_PRIVATE_KEY} > ~/.gnupg/private.key
         gpg --batch --import ~/.gnupg/private.key
         cat /ovis-ldms/apt-repo/dists/stable/Release | gpg --default-key ${GPG_USERNAME} -abs > /ovis-ldms/apt-repo/dists/stable/Release.gpg
         cat /ovis-ldms/apt-repo/dists/stable/Release | gpg --default-key ${GPG_USERNAME} -abs --clearsign > /ovis-ldms/apt-repo/dists/stable/InRelease
@@ -162,7 +163,7 @@ jobs:
         --sbom false \
         --file ./test-apt-server/Dockerfile \
         --output "type=image,push=true" .
-        echo "### ubuntu-arm64-apt-webserver created! :white_check_mark:" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: ### ubuntu-arm64-apt-webserver created!" >> $GITHUB_STEP_SUMMARY
 
 #    - name: Start Webserver  
 #      if: success()
