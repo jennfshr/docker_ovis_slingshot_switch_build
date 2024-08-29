@@ -67,13 +67,13 @@ jobs:
         echo "docker_image=${DOCKER_REGISTRY}/${DOCKER_IMAGE}" >> "$GITHUB_OUTPUT"
         echo "buildx_version=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
         echo "docker_platform=${DOCKER_TARGET_PLATFORM}" >> "$GITHUB_OUTPUT"
-        echo ":white_check_mark: ### Prepare Step Successful" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: Prepare Step Successful" >> $GITHUB_STEP_SUMMARY
 
     - name: Docker Login
       if: success()
       run: |
         echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
-        echo ":white_check_mark: ### Docker Login Successful" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: Docker Login Successful" >> $GITHUB_STEP_SUMMARY
 
     - name: Build Debian Package
       if: success()
@@ -85,7 +85,7 @@ jobs:
         --sbom false \
         --file ./Dockerfile \
         --output "type=image,push=true" .
-        echo ":white_check_mark: ### ovis-ldms_4.4.3-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: ovis-ldms_4.4.3-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
  
     - name: Stage artifacts to bindmount
       if: success()
@@ -95,7 +95,7 @@ jobs:
         docker run -i \
         -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${DOCKER_IMAGE} \
         cp -Rf /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-sampler/.
-        echo ":white_check_mark:### Artifacts staged to bindmount" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: Artifacts staged to bindmount" >> $GITHUB_STEP_SUMMARY
   
     - name: list directory contents of ldms-slingshot-sampler
       if: success()
@@ -105,7 +105,7 @@ jobs:
     - name: 🔍 Check for dependencies
       run: |
         command -v apt-ftparchive || sudo apt install apt-utils
-        apt-get install --reinstall ca-certificates
+        sudo apt-get install --reinstall ca-certificates
         
     - name: Create APT repo
       if: success()
@@ -142,7 +142,7 @@ jobs:
         do_hash "SHA1" "sha1sum" >> Release
         do_hash "SHA256" "sha256sum" >> Release
         cat Release
-        echo ":white_check_mark: ### APT Repo Creation Successful" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: APT Repo Creation Successful" >> $GITHUB_STEP_SUMMARY
         
     - name: Import GPG key
       if: success()
