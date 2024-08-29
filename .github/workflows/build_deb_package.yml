@@ -145,8 +145,9 @@ jobs:
     - name: Import GPG key
       if: success()
       run: |
-        echo ${GPG_PUBLIC_KEY} > /tmp/public.key
-        gpg --import /tmp/public.key
+        echo ${GPG_PUBLIC_KEY} > ~/.gpg/public.key
+        echo ${GPG_PRIVATE_KEY} > ~/.gpg/private.key
+        gpg --batch --import ~/.gnupg/private.key
         cat /ovis-ldms/apt-repo/dists/stable/Release | gpg --default-key ${GPG_USERNAME} -abs > /ovis-ldms/apt-repo/dists/stable/Release.gpg
         cat /ovis-ldms/apt-repo/dists/stable/Release | gpg --default-key ${GPG_USERNAME} -abs --clearsign > /ovis-ldms/apt-repo/dists/stable/InRelease
         echo "### GPG Keys imported and ovis-ldms apt-repo signed :white_check_mark:" >> $GITHUB_STEP_SUMMARY  
