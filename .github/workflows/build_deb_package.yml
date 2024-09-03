@@ -152,7 +152,8 @@ jobs:
         echo "${GPG_PUBLIC_KEY}" > ~/.gnupg/public.key
         eecho ${GPG_PRIVATE_KEY} > ~/.gnupg/private.key
         gpg -v --batch --import ~/.gnupg/public.key
-        echo "### GPG Keys imported :white_check_mark:" >> $GITHUB_STEP_SUMMARY
+        gpg -v --batch --import ~/.gnupg/private.key
+        echo ":white_check_mark: ### Private and Public GPG Keys imported" >> $GITHUB_STEP_SUMMARY
         GPG_KEY=$(gpg --list-keys --keyid-format=long | grep "^pub"| awk '{print $2}' | awk -F'/' '{print $2}')
         echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" |  gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY} adduid | tee -a $GITHUB_STEP_SUMMARY
         echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_PUBLIC_KEY} trust | tee -a $GITHUB_STEP_SUMMARY
