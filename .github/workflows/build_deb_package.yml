@@ -153,11 +153,13 @@ jobs:
         #echo ${GPG_PRIVATE_KEY} > ~/.gnupg/private.key
         gpg -v --batch --import ~/.gnupg/public.key
         echo "### GPG Keys imported :white_check_mark:" >> $GITHUB_STEP_SUMMARY
-        #gpg -v --batch --import ~/.gnupg/private.key
-        gpg --list-keys &>> $GITHUB_STEP_SUMMARY
+        echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" |  gpg --batch --command-fd 0 --expert --edit-key ${GPG_PUBLIC_KEY} adduid | tee -a $GITHUB_STEP_SUMMARY
+        echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_PUBLIC_KEY} trust | tee -a $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: ### Apt-repo signed" >> $GITHUB_STEP_SUMMARY  
+        gpg --list-keys | tee -a $GITHUB_STEP_SUMMARY
         cat /ovis-ldms/apt-repo/dists/stable/Release | gpg --debug-all --default-key ${GPG_USERNAME} -abs > /ovis-ldms/apt-repo/dists/stable/Release.gpg
         cat /ovis-ldms/apt-repo/dists/stable/Release | gpg --debug-all --default-key ${GPG_USERNAME} -abs --clearsign > /ovis-ldms/apt-repo/dists/stable/InRelease
-        echo "### Apt-repo signed :white_check_mark:" >> $GITHUB_STEP_SUMMARY  
+        echo ":white_check_mark: ### Apt-repo signed" >> $GITHUB_STEP_SUMMARY  
     
     - name: Build Test Server
       if: success()
