@@ -161,8 +161,8 @@ jobs:
         echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY} trust | tee -a $GITHUB_STEP_SUMMARY
         echo ":white_check_mark: ### GPG key edit adduid and trust complete" >> $GITHUB_STEP_SUMMARY  
         gpg --list-keys ${GPG_USERNAME} | tee -a $GITHUB_STEP_SUMMARY
-        cat ovis-ldms/apt-repo/dists/stable/Release | gpg --debug-all --default-key ${GPG_USERNAME} -abs > ovis-ldms/apt-repo/dists/stable/Release.gpg
-        cat ovis-ldms/apt-repo/dists/stable/Release | gpg --debug-all --default-key ${GPG_USERNAME} -abs --clearsign > ovis-ldms/apt-repo/dists/stable/InRelease
+        cat ovis-ldms/apt-repo/dists/stable/Release | gpg --default-key ${GPG_USERNAME} -abs > ovis-ldms/apt-repo/dists/stable/Release.gpg
+        cat ovis-ldms/apt-repo/dists/stable/Release | gpg --default-key ${GPG_USERNAME} -abs --clearsign > ovis-ldms/apt-repo/dists/stable/InRelease
         echo ":white_check_mark: ### Apt-repo signed" >> $GITHUB_STEP_SUMMARY  
     
     - name: Build Test Server
