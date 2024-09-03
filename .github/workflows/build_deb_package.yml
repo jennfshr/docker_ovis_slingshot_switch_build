@@ -150,7 +150,7 @@ jobs:
         mkdir -p ~/.gnupg
         chmod 0700 ~/.gnupg
         echo "${GPG_PUBLIC_KEY}" > ~/.gnupg/public.key
-        #echo ${GPG_PRIVATEe_KEY} > ~/.gnupg/private.key
+        eecho ${GPG_PRIVATE_KEY} > ~/.gnupg/private.key
         gpg -v --batch --import ~/.gnupg/public.key
         echo "### GPG Keys imported :white_check_mark:" >> $GITHUB_STEP_SUMMARY
         GPG_KEY=$(gpg --list-keys --keyid-format=long | grep "^pub"| awk '{print $2}' | awk -F'/' '{print $2}')
