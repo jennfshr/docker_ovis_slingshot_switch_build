@@ -150,10 +150,11 @@ jobs:
         mkdir -p ~/.gnupg
         chmod 0700 ~/.gnupg
         echo "${GPG_PUBLIC_KEY}" > ~/.gnupg/public.key
-        #echo ${GPG_PRIVATE_KEY} > ~/.gnupg/private.key
+        #echo ${GPG_PRIVATEe_KEY} > ~/.gnupg/private.key
         gpg -v --batch --import ~/.gnupg/public.key
         echo "### GPG Keys imported :white_check_mark:" >> $GITHUB_STEP_SUMMARY
-        echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" |  gpg --batch --command-fd 0 --expert --edit-key ${GPG_PUBLIC_KEY} adduid | tee -a $GITHUB_STEP_SUMMARY
+        GPG_KEY=$(gpg --list-keys --keyid-format=long | grep "^pub"| awk '{print $2}' | awk -F'/' '{print $2}')
+        echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" |  gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY} adduid | tee -a $GITHUB_STEP_SUMMARY
         echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_PUBLIC_KEY} trust | tee -a $GITHUB_STEP_SUMMARY
         echo ":white_check_mark: ### Apt-repo signed" >> $GITHUB_STEP_SUMMARY  
         gpg --list-keys | tee -a $GITHUB_STEP_SUMMARY
