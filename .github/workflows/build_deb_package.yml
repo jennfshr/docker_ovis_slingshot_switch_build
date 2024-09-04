@@ -106,6 +106,7 @@ jobs:
       run: |
         command -v apt-ftparchive || sudo apt install apt-utils
         sudo apt-get install --reinstall ca-certificates
+        sudo apt-get install --reinstall dpkg-sig
         
     - name: Create APT repo
       if: success()
@@ -149,6 +150,8 @@ jobs:
       run: |
         mkdir -p ~/.gnupg
         chmod 0700 ~/.gnupg
+        echo "${GPG_PASSWORD}" > ~/.gnupg/gpg_pwd.txt
+        chmod 0600 ~/.gnupg/gpg_pwd.txt
         echo "${GPG_PUBLIC_KEY}" > ~/.gnupg/public.key
         echo "${GPG_PRIVATE_KEY}" > ~/.gnupg/private.key
         chmod 0700 ~/.gnupg
@@ -161,8 +164,20 @@ jobs:
         echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY} trust | tee -a $GITHUB_STEP_SUMMARY
         echo ":white_check_mark: ### GPG key edit adduid and trust complete" >> $GITHUB_STEP_SUMMARY  
         gpg --list-keys ${GPG_USERNAME} | tee -a $GITHUB_STEP_SUMMARY
-        cat ovis-ldms/apt-repo/dists/stable/Release | gpg --default-key ${GPG_USERNAME} -abs > ovis-ldms/apt-repo/dists/stable/Release.gpg
-        cat ovis-ldms/apt-repo/dists/stable/Release | gpg --default-key ${GPG_USERNAME} -abs --clearsign > ovis-ldms/apt-repo/dists/stable/InRelease
+        cd /ovis-ldms-debian-package
+        cat << EOF >~/.gnupg/gpg-passwd.txt
+        ${GPG_PASSWORD}
+        EOF
+        cat << EOF >~/.gnupg/gpg.conf
+        use-agent
+        pinentry-mode loopback
+        EOF
+        cat << EOF >~/.gnupg/gpg-agent.conf
+        allow-loopback-pinentry
+        EOF
+        echo RELOADAGENT | gpg-connect-agent
+        export GPG_TTY=$(tty)
+        dpkg-sig -k ${GPG_KEY} --gpg-options '--passphrase-file ~/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb 
         echo ":white_check_mark: ### Apt-repo signed" >> $GITHUB_STEP_SUMMARY  
     
     - name: Build Test Server
