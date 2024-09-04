@@ -164,7 +164,7 @@ jobs:
         echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY} trust | tee -a $GITHUB_STEP_SUMMARY
         echo ":white_check_mark: ### GPG key edit adduid and trust complete" >> $GITHUB_STEP_SUMMARY  
         gpg --list-keys ${GPG_USERNAME} | tee -a $GITHUB_STEP_SUMMARY
-        cd /ovis-ldms-debian-package
+        cd ovis-ldms/apt-repo/pool/main/
         cat << EOF >~/.gnupg/gpg-passwd.txt
         ${GPG_PASSWORD}
         EOF
