@@ -148,6 +148,7 @@ jobs:
     - name: Import GPG key
       if: success()
       run: |
+        set -x
         mkdir -p ~/.gnupg
         chmod 0700 ~/.gnupg
         echo "${GPG_PASSWORD}" > ~/.gnupg/gpg_pwd.txt
@@ -164,7 +165,7 @@ jobs:
         echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY} trust | tee -a $GITHUB_STEP_SUMMARY
         echo ":white_check_mark: ### GPG key edit adduid and trust complete" >> $GITHUB_STEP_SUMMARY  
         gpg --list-keys ${GPG_USERNAME} | tee -a $GITHUB_STEP_SUMMARY
-        cd ovis-ldms/apt-repo/pool/main/
+        cd ~/ldms-slingshot-sampler
         cat << EOF >~/.gnupg/gpg-passwd.txt
         ${GPG_PASSWORD}
         EOF
@@ -177,6 +178,8 @@ jobs:
         EOF
         echo RELOADAGENT | gpg-connect-agent
         export GPG_TTY=$(tty)
+        file ovis-ldms_4.4.3-1_arm64.deb && echo ":white_check_mark: $(pwd)/ovis-ldms_4.4.3-1_arm64.deb is $(file ovis-ldms_4.4.3-1_arm64.deb)" | tee -a $GITHUB_STEP_SUMMARY
+        echo "Signing with dpkg-sig" | tee -a $GITHUB_STEP_SUMMARY 
         dpkg-sig -k ${GPG_KEY} --gpg-options '--passphrase-file ~/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb 
         echo ":white_check_mark: ### Apt-repo signed" >> $GITHUB_STEP_SUMMARY  
     
