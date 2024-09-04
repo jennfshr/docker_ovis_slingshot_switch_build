@@ -154,27 +154,28 @@ jobs:
         echo "${GPG_PRIVATE_KEY}" > ~/.gnupg/private.key
         chmod 0700 ~/.gnupg
         chmod 0600 ~/.gnupg/*.key
-        gpg -v --batch --import ~/.gnupg/public.key
-        gpg -v --batch --import ~/.gnupg/private.key
+        sudo cp -Rf ~runner/.gnupg ~/.
+        sudo gpg -v --batch --import ~/.gnupg/public.key
+        sudo gpg -v --batch --import ~/.gnupg/private.key
         echo ":white_check_mark: ### Private and Public GPG Keys imported" >> $GITHUB_STEP_SUMMARY
-        GPG_KEY=( $(gpg --list-keys --keyid-format=long | grep "^pub"| awk '{print $2}' | awk -F'/' '{print $2}') )
-        echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" |  gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY[1]} adduid | tee -a $GITHUB_STEP_SUMMARY
-        echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY[1]} trust | tee -a $GITHUB_STEP_SUMMARY
+        GPG_KEY=( $(sudo gpg --list-keys --keyid-format=long | grep "^pub"| awk '{print $2}' | awk -F'/' '{print $2}') )
+        sudo echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY[1]} adduid | tee -a $GITHUB_STEP_SUMMARY
+        sudo echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY[1]} trust | tee -a $GITHUB_STEP_SUMMARY
         echo ":white_check_mark: ### GPG key edit adduid and trust complete" >> $GITHUB_STEP_SUMMARY  
-        gpg --list-keys ${GPG_USERNAME} | tee -a $GITHUB_STEP_SUMMARY
+        sudo gpg --list-keys ${GPG_USERNAME} | tee -a $GITHUB_STEP_SUMMARY
         cd ${deb_pkg_dir} && file ovis-ldms_4.4.3-1_arm64.deb
-        cat << EOF >~/.gnupg/gpg-passwd.txt
+        sudo cat << EOF >~/.gnupg/gpg-passwd.txt
         ${GPG_PASSWORD}
         EOF
-        cat << EOF >~/.gnupg/gpg.conf
+        sudo cat << EOF >~/.gnupg/gpg.conf
         use-agent
         pinentry-mode loopback
         EOF
-        cat << EOF >~/.gnupg/gpg-agent.conf
+        sudo cat << EOF >~/.gnupg/gpg-agent.conf
         allow-loopback-pinentry
         EOF
-        echo RELOADAGENT | gpg-connect-agent
-        export GPG_TTY=$(tty)
+        sudo echo RELOADAGENT | gpg-connect-agent
+        sudo export GPG_TTY=$(tty)
         ls -al ovis-ldms_4.4.3-1_arm64.deb && echo ":white_check_mark: $(pwd)/ovis-ldms_4.4.3-1_arm64.deb is $(file ovis-ldms_4.4.3-1_arm64.deb)" | tee -a $GITHUB_STEP_SUMMARY
         echo "Signing with dpkg-sig" | tee -a $GITHUB_STEP_SUMMARY 
         sudo dpkg-sig -k ${GPG_KEY[1]} --gpg-options '--passphrase-file ~/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb 
