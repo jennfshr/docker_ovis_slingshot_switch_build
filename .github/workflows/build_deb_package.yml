@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:      
       DOCKER_REGISTRY: docker.io
-      DOCKER_IMAGE: jkgreen76/ldms-slingshot-sampler
+      DOCKER_IMAGE: jkgreen76/ldms-slingshot-switch-sampler
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
@@ -90,17 +90,17 @@ jobs:
     - name: Stage artifacts to bindmount
       if: success()
       run: |
-        mkdir -p ldms-slingshot-sampler
-        sudo chmod -R 777 $(pwd)/ldms-slingshot-sampler
+        mkdir -p ldms-slingshot-switch-sampler
+        sudo chmod -R 777 $(pwd)/ldms-slingshot-switch-sampler
         docker run -i \
-        -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${DOCKER_IMAGE} \
-        cp -Rf /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-sampler/.
+        -v $(pwd)/ldms-slingshot-switch-sampler:/ldms-slingshot-switch-sampler:rw ${DOCKER_IMAGE} \
+        cp -Rf /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-switch-sampler/.
         echo ":white_check_mark: Artifacts staged to bindmount" >> $GITHUB_STEP_SUMMARY
   
-    - name: list directory contents of ldms-slingshot-sampler
+    - name: list directory contents of ldms-slingshot-switch-sampler
       if: success()
       run: |
-        ls -al ldms-slingshot-sampler
+        ls -al ldms-slingshot-switch-sampler
         
     - name: 🔍 Check for dependencies
       run: |
@@ -111,88 +111,69 @@ jobs:
     - name: Create APT repo
       if: success()
       run: |
-        su -
         set -e
-        do_hash() {
-        HASH_NAME=$1
-        HASH_CMD=$2
-        echo "${HASH_NAME}:"
-        for f in $(find -type f); do
-          f=$(echo $f | cut -c3-) # remove ./ prefix
-          if [ "$f" = "Release" ]; then
-              continue
-          fi
-          echo " $(${HASH_CMD} ${f}  | cut -d" " -f1) $(wc -c $f)"
-        done
-        }
-        mkdir -p ovis-ldms/apt-repo/dists/stable/main/binary-arm64
-        mkdir -p ovis-ldms/apt-repo/pool/main
-        [ -f $(pwd)/ldms-slingshot-sampler/ovis-ldms_4.4.3-1_arm64.deb ]
-        deb_pkg_dir=$(dirname $(readlink -f $(pwd)/ldms-slingshot-sampler/ovis-ldms_4.4.3-1_arm64.deb))
-        cp $(pwd)/ldms-slingshot-sampler/ovis-ldms_4.4.3-1_arm64.deb ovis-ldms/apt-repo/pool/main/.
-        cd ovis-ldms/apt-repo
-        dpkg-scanpackages --arch arm64 pool/ > dists/stable/main/binary-arm64/Packages
-        cat dists/stable/main/binary-arm64/Packages | gzip -9 > dists/stable/main/binary-arm64/Packages.gz
-        cd dists/stable
-        cat << EOF > Release
-        Architectures: arm64
-        Components: main
-        Date: $(date -Ru)
-        Version: 4.4.3-1
-        Suite: stable
-        EOF
-        do_hash "MD5Sum" "md5sum" >> Release
-        do_hash "SHA1" "sha1sum" >> Release
-        do_hash "SHA256" "sha256sum" >> Release
-        cat Release
-        echo ":white_check_mark: APT Repo Creation Successful" >> $GITHUB_STEP_SUMMARY
-        set -x
-        mkdir -p ~/.gnupg
-        chmod 0700 ~/.gnupg
-        echo "${GPG_PASSWORD}" > ~/.gnupg/gpg_pwd.txt
-        chmod 0600 ~/.gnupg/gpg_pwd.txt
-        echo "${GPG_PUBLIC_KEY}" > ~/.gnupg/public.key
-        echo "${GPG_PRIVATE_KEY}" > ~/.gnupg/private.key
-        chmod 0700 ~/.gnupg
-        chmod 0600 ~/.gnupg/*.key
-        gpg -v --batch --import ~/.gnupg/public.key
-        gpg -v --batch --import ~/.gnupg/private.key
-        echo ":white_check_mark: ### Private and Public GPG Keys imported" >> $GITHUB_STEP_SUMMARY
-        GPG_KEY=( $(gpg --list-keys --keyid-format=long | grep "^pub"| awk '{print $2}' | awk -F'/' '{print $2}') )
-        echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY[1]} adduid | tee -a $GITHUB_STEP_SUMMARY
-        echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY[1]} trust | tee -a $GITHUB_STEP_SUMMARY
-        echo ":white_check_mark: ### GPG key edit adduid and trust complete" >> $GITHUB_STEP_SUMMARY  
-        gpg --list-keys ${GPG_USERNAME} | tee -a $GITHUB_STEP_SUMMARY
-        cd ${deb_pkg_dir} && file ovis-ldms_4.4.3-1_arm64.deb
-        cat << EOF >~/.gnupg/gpg-passwd.txt
-        ${GPG_PASSWORD}
-        EOF
-        cat << EOF >~/.gnupg/gpg.conf
-        use-agent
-        pinentry-mode loopback
-        EOF
-        cat << EOF >~/.gnupg/gpg-agent.conf
-        allow-loopback-pinentry
-        EOF
-        echo RELOADAGENT | gpg-connect-agent
-        tty=$(which tty)
-        export GPG_TTY=$tty
-        ls -al ovis-ldms_4.4.3-1_arm64.deb && echo ":white_check_mark: $(pwd)/ovis-ldms_4.4.3-1_arm64.deb is $(file ovis-ldms_4.4.3-1_arm64.deb)" | tee -a $GITHUB_STEP_SUMMARY
-        echo "Signing with dpkg-sig" | tee -a $GITHUB_STEP_SUMMARY 
-        dpkg-sig -k ${GPG_KEY[1]} --gpg-options '--passphrase-file ~/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb 
+        cat << DOCKERFILE >Dockerfile
+        FROM docker.io/jkgreen76:ldms-slingshot-switch-sampler
+
+        RUN bash <<EOF > /gpg_sign.log
+        printf 'do_hash() {\n  HASH_NAME=$1\n  HASH_CMD=$2\n  echo "${HASH_NAME}:"\n  for f in $(find -type f); do\n    f=$(echo $f | cut -c3-)\n    if [ "$f" = "Release" ]; then\n      continue\n    fi\n    echo " $(${HASH_CMD} ${f}  | cut -d" " -f1) $(wc -c $f)"\n  done\n}\n' >> ~/.bash_custom_functions &&
+        source ~/.bash_custom_functions &&
+        mkdir -p ovis-ldms/apt-repo/dists/stable/main/binary-arm64 &&
+        mkdir -p ovis-ldms/apt-repo/pool/main &&
+        [ -f $(pwd)/ldms-slingshot-switch-sampler/ovis-ldms_4.4.3-1_arm64.deb ] &&
+        deb_pkg_dir=$(dirname $(readlink -f $(pwd)/ldms-slingshot-switch-sampler/ovis-ldms_4.4.3-1_arm64.deb)) &&
+        cp $(pwd)/ldms-slingshot-switch-sampler/ovis-ldms_4.4.3-1_arm64.deb ovis-ldms/apt-repo/pool/main/. &&
+        cd ovis-ldms/apt-repo &&
+        dpkg-scanpackages --arch arm64 pool/ > dists/stable/main/binary-arm64/Packages &&
+        cat dists/stable/main/binary-arm64/Packages | gzip -9 > dists/stable/main/binary-arm64/Packages.gz &&
+        cd dists/stable &&
+        printf 'Architectures: arm64\nComponents: main\nDate: $(date -Ru)\nVersion: 4.4.3-1\nSuite: stable' > Release &&
+        do_hash "MD5Sum" "md5sum" >> Release &&
+        do_hash "SHA1" "sha1sum" >> Release && 
+        do_hash "SHA256" "sha256sum" >> Release &&
+        cat Release &&
+        set -x &&
+        mkdir -p ~/.gnupg &&
+        chmod 0700 ~/.gnupg &&
+        echo "${GPG_PASSWORD}" > ~/.gnupg/gpg_pwd.txt &&
+        chmod 0600 ~/.gnupg/gpg_pwd.txt &&
+        echo "${GPG_PUBLIC_KEY}" > ~/.gnupg/public.key &&
+        echo "${GPG_PRIVATE_KEY}" > ~/.gnupg/private.key &&
+        chmod 0700 ~/.gnupg &&
+        chmod 0600 ~/.gnupg/*.key &&
+        gpg -v --batch --import ~/.gnupg/public.key &&
+        gpg -v --batch --import ~/.gnupg/private.key &&
+        GPG_KEY=( $(gpg --list-keys --keyid-format=long | grep "^pub"| awk '{print $2}' | awk -F'/' '{print $2}') ) &&
+        echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY[1]} adduid &&
+        echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${GPG_KEY[1]} trust &&  
+        gpg --list-keys ${GPG_USERNAME} &&
+        cd ${deb_pkg_dir} && file ovis-ldms_4.4.3-1_arm64.deb &&
+        printf "${GPG_PASSWORD}" > ~/.gnupg/gpg-passwd.txt &&
+        printf "use-agent\npinentry-mode loopback" > ~/.gnupg/gpg.conf &&
+        printf "allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf &&
+        echo RELOADAGENT | gpg-connect-agent &&
+        tty=$(which tty) &&
+        export GPG_TTY=$tty &&
+        ls -al ovis-ldms_4.4.3-1_arm64.deb &&
+        echo "$(pwd)/ovis-ldms_4.4.3-1_arm64.deb is $(file ovis-ldms_4.4.3-1_arm64.deb)" &&
+        dpkg-sig -k ${GPG_KEY[1]} --gpg-options '--passphrase-file ~/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb &&
+        DOCKERFILE
+        docker run -i \
+          -v $(pwd)/ldms-slingshot-switch-sampler:/ldms-slingshot-switch-sampler:rw ${DOCKER_IMAGE} \
+          cp -Rf ovis-ldms/apt-repo /ldms-slingshot-switch-sampler/.
         echo ":white_check_mark: ### Apt-repo signed" >> $GITHUB_STEP_SUMMARY  
     
-    - name: Build Test Server
-      if: success()
-      run: |
-        docker buildx build \
-        --platform ${{ steps.prepare.outputs.docker_platform }} \
-        --tag arm64-ubuntu-apt-webserver \
-        --provenance false \
-        --sbom false \
-        --file ./test-apt-server/Dockerfile \
-        --output "type=image,push=true" .
-        echo ":white_check_mark: ### ubuntu-arm64-apt-webserver created!" >> $GITHUB_STEP_SUMMARY
+#    - name: Build Test Server
+#      if: success()
+#      run: |
+#        docker buildx build \
+#        --platform ${{ steps.prepare.outputs.docker_platform }} \
+#        --tag arm64-ubuntu-apt-webserver \
+#        --provenance false \
+#        --sbom false \
+#        --file ./test-apt-server/Dockerfile \
+#        --output "type=image,push=true" .
+#        echo ":white_check_mark: ### ubuntu-arm64-apt-webserver created!" >> $GITHUB_STEP_SUMMARY
 
 #    - name: Start Webserver  
 #      if: success()
@@ -209,8 +190,8 @@ jobs:
       if: success()
       uses: actions/upload-pages-artifact@v3.0.1
       with:
-        name: ldms-slingshot-sampler
-        path: ldms-slingshot-sampler
+        name: ldms-slingshot-switch-sampler
+        path: ldms-slingshot-switch-sampler
         
     - name: Artifact Upload
       if: success()
