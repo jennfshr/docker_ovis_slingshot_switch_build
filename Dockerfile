@@ -1,7 +1,8 @@
-FROM ubuntu:latest
+FROM ubuntu:20.04
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 RUN apt update \
+    && apt list --upgradable \
     && apt install -y \
        autoconf \
        bash \
