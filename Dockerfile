@@ -71,7 +71,7 @@ cat \$PWD/debian/control && \
 echo "13" > \$PWD/debian/compat && \
 echo -e "\\tdh_auto_configure -- --disable-infiniband --disable-papi --disable-opa2 --disable-tx2mon --disable-static --disable-perf --disable-store --disable-flatfile --disable-csv --disable-lustre --disable-clock --disable-synthetic --disable-varset --disable-lnet_stats --disable-gpumetrics --disable-coretemp --disable-array_example --disable-hello_stream --disable-blob_stream --disable-procinterrupts --disable-procnet --disable-procnetdev --disable-procnfs --disable-dstat --disable-procstat --disable-llnl-edac --disable-tsampler --disable-cray_power_sampler --disable-loadavg --disable-vmstat --disable-procdiskstats --disable-spaceless_names --disable-generic_sampler --disable-jobinfo-sampler --disable-app-sampler --disable-readline --with-slurm=no --disable-ibnet --disable-timescale-store --enable-slingshot_switch" >>\$PWD/debian/rules && \
 cat \$PWD/debian/rules && debuild -uc -us && \
-printf 'do_hash() {\n  HASH_NAME=$1\n  HASH_CMD=$2\n  echo "${HASH_NAME}:"\n  for f in $(find -type f); do\n    f=$(echo $f | cut -c3-)\n    if [ "$f" = "Release" ]; then\n      continue\n    fi\n    echo " $(${HASH_CMD} ${f}  | cut -d" " -f1) $(wc -c $f)"\n  done\n}\n' >> ~/.bash_custom_functions && \
+printf 'do_hash() {\n  HASH_NAME=$1\n  HASH_CMD=$2\n  echo "${HASH_NAME}:"\n  for f in $(find -type f); do\n    f=$(echo $f | cut -c3-)\n    if [ "$f" = "Release" ]; then\n      continue\n    fi\n    echo " $(${HASH_CMD} ${f}  | cut -d" " -f1) $(wc -c $f)"\n  done\n}\n' >> /root/.bash_custom_functions && \
 source /root/.bash_custom_functions && \
 mkdir -p /root/ovis-ldms/apt-repo/dists/stable/main/binary-arm64 && \
 mkdir -p /root/ovis-ldms/apt-repo/pool/main && \
@@ -90,7 +90,7 @@ cat Release && \
 mkdir -p /root/.gnupg && \
 chmod 0700 /root/.gnupg && \
 echo "${GPG_PASSWORD}" > /root/.gnupg/gpg_pwd.txt && \
-chmod 0600 ~/.gnupg/gpg_pwd.txt && \
+chmod 0600 /root/.gnupg/gpg_pwd.txt && \
 echo "${GPG_PUBLIC_KEY}" > /root/.gnupg/public.key && \
 echo "${GPG_PRIVATE_KEY}" > /root/.gnupg/private.key && \
 chmod 0700 /root/.gnupg && \
@@ -110,5 +110,5 @@ tty=$(which tty) && \
 export GPG_TTY=$tty && \
 ls -al ovis-ldms_4.4.3-1_arm64.deb && \
 echo "$(pwd)/ovis-ldms_4.4.3-1_arm64.deb is $(file ovis-ldms_4.4.3-1_arm64.deb)" && \
-dpkg-sig -k ${GPG_KEY[1]} --gpg-options '--passphrase-file ~/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb
+dpkg-sig -k ${GPG_KEY[1]} --gpg-options '--passphrase-file /root/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb
 EOF
