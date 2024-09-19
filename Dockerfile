@@ -110,5 +110,5 @@ tty=$(which tty) && \
 export GPG_TTY=$tty && \
 ls -al ovis-ldms_4.4.3-1_arm64.deb && \
 echo "$(pwd)/ovis-ldms_4.4.3-1_arm64.deb is $(file ovis-ldms_4.4.3-1_arm64.deb)" && \
-dpkg-sig -k ${GPG_KEY[1]} --gpg-options '--passphrase-file ~/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb \
+dpkg-sig -k ${GPG_KEY[1]} --gpg-options '--passphrase-file ~/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb
 EOF
