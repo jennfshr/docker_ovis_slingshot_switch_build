@@ -108,7 +108,7 @@ jobs:
         set -e
         set -x
         cat << DOCKERFILE >gpgsign.Dockerfile
-        FROM jkgreen76:ldms-slingshot-switch-sampler
+        FROM docker.io:jkgreen76/ldms-slingshot-switch-sampler
         RUN apt update \\
           && apt install -y --reinstall \\
              ca-certificates \\
