@@ -70,7 +70,7 @@ Description: LDMS for SlingShot Switches
 cat \$PWD/debian/control && \
 echo "13" > \$PWD/debian/compat && \
 echo -e "\\tdh_auto_configure -- --disable-infiniband --disable-papi --disable-opa2 --disable-tx2mon --disable-static --disable-perf --disable-store --disable-flatfile --disable-csv --disable-lustre --disable-clock --disable-synthetic --disable-varset --disable-lnet_stats --disable-gpumetrics --disable-coretemp --disable-array_example --disable-hello_stream --disable-blob_stream --disable-procinterrupts --disable-procnet --disable-procnetdev --disable-procnfs --disable-dstat --disable-procstat --disable-llnl-edac --disable-tsampler --disable-cray_power_sampler --disable-loadavg --disable-vmstat --disable-procdiskstats --disable-spaceless_names --disable-generic_sampler --disable-jobinfo-sampler --disable-app-sampler --disable-readline --with-slurm=no --disable-ibnet --disable-timescale-store --enable-slingshot_switch" >>\$PWD/debian/rules && \
-cat \$PWD/debian/rules && debuild -uc -us \
+cat \$PWD/debian/rules && debuild -uc -us && \
 printf 'do_hash() {\n  HASH_NAME=$1\n  HASH_CMD=$2\n  echo "${HASH_NAME}:"\n  for f in $(find -type f); do\n    f=$(echo $f | cut -c3-)\n    if [ "$f" = "Release" ]; then\n      continue\n    fi\n    echo " $(${HASH_CMD} ${f}  | cut -d" " -f1) $(wc -c $f)"\n  done\n}\n' >> ~/.bash_custom_functions &&
 source /root/.bash_custom_functions &&
 mkdir -p /root/ovis-ldms/apt-repo/dists/stable/main/binary-arm64 &&
