@@ -77,7 +77,7 @@ source /root/.bash_custom_functions && \
 mkdir -p /root/ovis-ldms/apt-repo/dists/stable/main/binary-arm64 && \
 mkdir -p /root/ovis-ldms/apt-repo/pool/main && \
 [ -f /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb ] && \
-deb_pkg_dir=$(dirname $(readlink -f /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb)) && \
+deb_pkg_dir=\$(dirname \$(readlink -f /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb)) && \
 cp /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /root/ovis-ldms/apt-repo/pool/main/. && \
 cd /root/ovis-ldms/apt-repo && \
 dpkg-scanpackages --arch arm64 pool/ > dists/stable/main/binary-arm64/Packages && \
