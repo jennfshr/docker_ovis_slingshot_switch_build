@@ -105,7 +105,7 @@ jobs:
         echo ":white_check_mark: Artifacts staged to bindmount" >> $GITHUB_STEP_SUMMARY
   
     - name: list directory contents of ldms-slingshot-switch-sampler
-      if: success
+      if: success()
       id: list
       run: |
         ls -al ldms-slingshot-switch-sampler
