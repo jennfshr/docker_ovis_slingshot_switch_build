@@ -81,7 +81,12 @@ jobs:
     - name: Build Debian Package
       if: success()
       id: build
-      
+      env:
+        GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
+        GPG_EMAIL: ${{ secrets.GPG_EMAIL }}
+        GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+        GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
+        GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       run: |
         docker buildx build \
         --platform ${{ steps.prepare.outputs.docker_platform }} \
