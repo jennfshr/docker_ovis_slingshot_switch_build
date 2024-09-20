@@ -98,20 +98,21 @@ echo "${GPG_PRIVATE_KEY}" > /root/.gnupg/private.key && \
 chmod 0700 /root/.gnupg && \
 chmod 0600 /root/.gnupg/*.key && \
 echo "<<<<<<<<<<< Checking gnupg files \$(ls -al /root/.gnupg) >>>>>>>>>>>>>>>>>" && \
-gpg -v --batch --import /root/.gnupg/public.key && \
-gpg -v --batch --import /root/.gnupg/private.key && \
-GPG_KEY=( \$(gpg --list-keys --keyid-format=long | grep "^pub"| awk '{print \$2}' | awk -F'/' '{print \$2}') ) && \
-echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" | gpg --batch --command-fd 0 --expert --edit-key \${GPG_KEY[1]} adduid && \
-echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key \${GPG_KEY[1]} trust && \
-gpg --list-keys ${GPG_USERNAME} && \
-cd \${deb_pkg_dir} && file ovis-ldms_4.4.3-1_arm64.deb && \
-printf "${GPG_PASSWORD}" > /root/.gnupg/gpg-passwd.txt && \
-printf "use-agent\npinentry-mode loopback" > /root/.gnupg/gpg.conf && \
-printf "allow-loopback-pinentry" > /root/.gnupg/gpg-agent.conf && \
-echo RELOADAGENT | gpg-connect-agent && \
-tty=/usr/bin/tty && \
-export GPG_TTY=\$tty && \
-ls -al ovis-ldms_4.4.3-1_arm64.deb && \
-echo "\$(pwd)/ovis-ldms_4.4.3-1_arm64.deb is \$(file ovis-ldms_4.4.3-1_arm64.deb)" && \
-dpkg-sig -k \${GPG_KEY[1]} --gpg-options '--passphrase-file /root/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb 
+#gpg -v --batch --import /root/.gnupg/public.key && \
+#gpg -v --batch --import /root/.gnupg/private.key && \
+#GPG_KEY=( \$(gpg --list-keys --keyid-format=long | grep "^pub"| awk '{print \$2}' | awk -F'/' '{print \$2}') ) && \
+#echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" | gpg --batch --command-fd 0 --expert --edit-key \${GPG_KEY[1]} adduid && \
+#echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key \${GPG_KEY[1]} trust && \
+#gpg --list-keys ${GPG_USERNAME} && \
+#cd \${deb_pkg_dir} && file ovis-ldms_4.4.3-1_arm64.deb && \
+#printf "${GPG_PASSWORD}" > /root/.gnupg/gpg-passwd.txt && \
+#printf "use-agent\npinentry-mode loopback" > /root/.gnupg/gpg.conf && \
+#printf "allow-loopback-pinentry" > /root/.gnupg/gpg-agent.conf && \
+#echo RELOADAGENT | gpg-connect-agent && \
+#tty=/usr/bin/tty && \
+#export GPG_TTY=\$tty && \
+#ls -al ovis-ldms_4.4.3-1_arm64.deb && \
+#echo "\$(pwd)/ovis-ldms_4.4.3-1_arm64.deb is \$(file ovis-ldms_4.4.3-1_arm64.deb)" && \
+#dpkg-sig -k \${GPG_KEY[1]} --gpg-options '--passphrase-file /root/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb 
+echo "early termination for debug"
 EOF
