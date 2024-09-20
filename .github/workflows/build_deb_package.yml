@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:      
       DOCKER_REGISTRY: docker.io
-      DOCKER_IMAGE: jkgreen76/ldms-slingshot-switch-sampler
+      DOCKER_IMAGE: jkgreen76/ldms-slingshot-switch-sampler:latest
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
@@ -99,11 +99,10 @@ jobs:
         mkdir -p ldms-slingshot-switch-sampler
         sudo chmod -R 777 $(pwd)/ldms-slingshot-switch-sampler
         docker run -i \
-        --platform ${{ steps.prepare.outputs.docker_platform }} \
         -v $(pwd)/ldms-slingshot-switch-sampler:/ldms-slingshot-switch-sampler:rw ${DOCKER_IMAGE} \
         cp -Rf /ovis-ldms-debian-package/* /ldms-slingshot-switch-sampler/.
         echo ":white_check_mark: Artifacts staged to bindmount" >> $GITHUB_STEP_SUMMARY
-  
+
     - name: list directory contents of ldms-slingshot-switch-sampler
       if: success()
       id: list
