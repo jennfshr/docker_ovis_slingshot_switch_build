@@ -94,7 +94,7 @@ jobs:
         sudo chmod -R 777 $(pwd)/ldms-slingshot-switch-sampler
         docker run -i \
         -v $(pwd)/ldms-slingshot-switch-sampler:/ldms-slingshot-switch-sampler:rw ${DOCKER_IMAGE} \
-        cp -Rf /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-switch-sampler/.
+        cp -Rf /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-switch-sampler/ovis-ldms_4.4.3-1_arm64.deb
         echo ":white_check_mark: Artifacts staged to bindmount" >> $GITHUB_STEP_SUMMARY
   
     - name: list directory contents of ldms-slingshot-switch-sampler
@@ -130,10 +130,10 @@ jobs:
       if: success()
       uses: actions/upload-pages-artifact@v3.0.1
       with:
-        name: ldms-slingshot-switch-sampler
-        path: ldms-slingshot-switch-sampler
+        name: ovis-ldms_4.4.3-1_arm64.deb
+        path: ldms-slingshot-switch-sampler/ovis-ldms_4.4.3-1_arm64.deb
         
     - name: Artifact Upload
       if: success()
       run: |
-        echo "### ovis-ldms_4.4.3-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY
+        echo ":white_check_mark: ovis-ldms_4.4.3-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY
