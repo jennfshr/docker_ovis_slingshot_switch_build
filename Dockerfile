@@ -1,4 +1,4 @@
-eFROM ubuntu:20.04
+FROM ubuntu:20.04
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 RUN apt update \
