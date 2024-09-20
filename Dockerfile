@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+eFROM ubuntu:20.04
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 RUN apt update \
@@ -91,20 +91,21 @@ cat Release && \
 echo "<<<<<<<<<<< dpkg-scanpackages complete >>>>>>>>>>>>>>" && \
 mkdir -p /root/.gnupg && \
 chmod 0700 /root/.gnupg && \
-echo "\${GPG_PASSWORD}" > /root/.gnupg/gpg_pwd.txt && \
+echo "${GPG_PASSWORD}" > /root/.gnupg/gpg_pwd.txt && \
 chmod 0600 /root/.gnupg/gpg_pwd.txt && \
-echo "\${GPG_PUBLIC_KEY}" > /root/.gnupg/public.key && \
-echo "\${GPG_PRIVATE_KEY}" > /root/.gnupg/private.key && \
+echo "${GPG_PUBLIC_KEY}" > /root/.gnupg/public.key && \
+echo "${GPG_PRIVATE_KEY}" > /root/.gnupg/private.key && \
 chmod 0700 /root/.gnupg && \
 chmod 0600 /root/.gnupg/*.key && \
+echo "<<<<<<<<<<< Checking gnupg files \$(ls -al /root/.gnupg) >>>>>>>>>>>>>>>>>" && \
 gpg -v --batch --import /root/.gnupg/public.key && \
 gpg -v --batch --import /root/.gnupg/private.key && \
 GPG_KEY=( \$(gpg --list-keys --keyid-format=long | grep "^pub"| awk '{print \$2}' | awk -F'/' '{print \$2}') ) && \
-echo -e "\$GPG_USERNAME\n\$GPG_EMAIL\nNo Comment\no\n" | gpg --batch --command-fd 0 --expert --edit-key \${GPG_KEY[1]} adduid && \
+echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" | gpg --batch --command-fd 0 --expert --edit-key \${GPG_KEY[1]} adduid && \
 echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key \${GPG_KEY[1]} trust && \
-gpg --list-keys \${GPG_USERNAME} && \
+gpg --list-keys ${GPG_USERNAME} && \
 cd \${deb_pkg_dir} && file ovis-ldms_4.4.3-1_arm64.deb && \
-printf "\${GPG_PASSWORD}" > /root/.gnupg/gpg-passwd.txt && \
+printf "${GPG_PASSWORD}" > /root/.gnupg/gpg-passwd.txt && \
 printf "use-agent\npinentry-mode loopback" > /root/.gnupg/gpg.conf && \
 printf "allow-loopback-pinentry" > /root/.gnupg/gpg-agent.conf && \
 echo RELOADAGENT | gpg-connect-agent && \
