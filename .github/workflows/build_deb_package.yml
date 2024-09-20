@@ -45,6 +45,7 @@ jobs:
       GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       DOCKER_TARGET_PLATFORM: 'linux/arm64'
+      OVIS_RELEASE: v4.4.3
 
     steps:
     - name: Checkout code
@@ -67,16 +68,20 @@ jobs:
         echo "docker_image=${DOCKER_REGISTRY}/${DOCKER_IMAGE}" >> "$GITHUB_OUTPUT"
         echo "buildx_version=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
         echo "docker_platform=${DOCKER_TARGET_PLATFORM}" >> "$GITHUB_OUTPUT"
+        echo "ovis_release=${OVIS_RELEASE}" >> "$GITHUB_OUTPUT"
         echo ":white_check_mark: Prepare Step Successful" >> $GITHUB_STEP_SUMMARY
 
     - name: Docker Login
       if: success()
+      id: login
       run: |
         echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
         echo ":white_check_mark: Docker Login Successful" >> $GITHUB_STEP_SUMMARY
 
     - name: Build Debian Package
       if: success()
+      id: build
+      
       run: |
         docker buildx build \
         --platform ${{ steps.prepare.outputs.docker_platform }} \
@@ -89,16 +94,19 @@ jobs:
  
     - name: Stage artifacts to bindmount
       if: success()
+      id: stage
       run: |
         mkdir -p ldms-slingshot-switch-sampler
         sudo chmod -R 777 $(pwd)/ldms-slingshot-switch-sampler
         docker run -i \
+        --platform ${{ steps.prepare.outputs.docker_platform }} \
         -v $(pwd)/ldms-slingshot-switch-sampler:/ldms-slingshot-switch-sampler:rw ${DOCKER_IMAGE} \
-        cp -Rf /ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb /ldms-slingshot-switch-sampler/ovis-ldms_4.4.3-1_arm64.deb
+        cp -Rf /ovis-ldms-debian-package/* /ldms-slingshot-switch-sampler/.
         echo ":white_check_mark: Artifacts staged to bindmount" >> $GITHUB_STEP_SUMMARY
   
     - name: list directory contents of ldms-slingshot-switch-sampler
-      if: success()
+      if: success
+      id: list
       run: |
         ls -al ldms-slingshot-switch-sampler
         
@@ -125,15 +133,20 @@ jobs:
           
 
 #    - name: Test APT repo
+
             
     - name: Upload artifact
       if: success()
-      uses: actions/upload-pages-artifact@v3.0.1
+      id: upload
+      uses: actions/upload-artifact@v3.2.1-node20
       with:
-        name: ovis-ldms_4.4.3-1_arm64.deb
-        path: ldms-slingshot-switch-sampler/ovis-ldms_4.4.3-1_arm64.deb
-        
-    - name: Artifact Upload
+        name: ovis-${{ steps.prepare.outputs.ovis_release }}-arm64_slingshot-switch-sampler
+        path: /ldms-slingshot-switch-sampler
+        if-no-files-found: error
+        retention-days: 1
+        include-hidden-files: true
+ 
+    - name: Artifact Upload Confirmation
       if: success()
       run: |
         echo ":white_check_mark: ovis-ldms_4.4.3-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY
