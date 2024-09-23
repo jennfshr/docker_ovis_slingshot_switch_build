@@ -34,6 +34,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm/v6
+          - linux/arm/v7
+          - linux/arm64
     env:      
       DOCKER_REGISTRY: docker.io
       DOCKER_IMAGE: jkgreen76/ldms-slingshot-switch-sampler:latest
@@ -44,77 +52,180 @@ jobs:
       GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
       GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      DOCKER_TARGET_PLATFORM: 'linux/arm64'
       OVIS_RELEASE: v4.4.3
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-      with:
-        platforms: 'linux/arm64'
-        
-    - name: Set up Docker Buildx      
-      uses: docker/setup-buildx-action@v3    
-      with:        
-        version: latest  
-
-    - name: Prepare
-      if: success()
-      id: prepare
-      run: |
-        echo "docker_image=${DOCKER_REGISTRY}/${DOCKER_IMAGE}" >> "$GITHUB_OUTPUT"
-        echo "buildx_version=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
-        echo "docker_platform=${DOCKER_TARGET_PLATFORM}" >> "$GITHUB_OUTPUT"
-        echo "ovis_release=${OVIS_RELEASE}" >> "$GITHUB_OUTPUT"
-        echo ":white_check_mark: Prepare Step Successful" >> $GITHUB_STEP_SUMMARY
-
-    - name: Docker Login
-      if: success()
-      id: login
-      run: |
-        echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
-        echo ":white_check_mark: Docker Login Successful" >> $GITHUB_STEP_SUMMARY
-
-    - name: Build Debian Package
-      if: success()
-      id: build
-      env:
-        GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
-        GPG_EMAIL: ${{ secrets.GPG_EMAIL }}
-        GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
-        GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      run: |
-        docker buildx build \
-        --platform ${{ steps.prepare.outputs.docker_platform }} \
-        --tag ${{ steps.prepare.outputs.docker_image }} \
-        --provenance false \
-        --sbom false \
-        --file ./Dockerfile \
-        --output "type=image,push=true" .
-        echo ":white_check_mark: ovis-ldms_4.4.3-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
+      - name: Platform
+        run: |
+          platform=${{ matrix.platform }}
+          echo "DOCKER_TARGET_PLATFORM=${platform//\//-}" >>$GITHUB_ENV
+    
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
  
-    - name: Stage artifacts to bindmount
-      if: success()
-      id: stage
-      run: |
-        mkdir -p ldms-slingshot-switch-sampler
-        sudo chmod -R 777 $(pwd)/ldms-slingshot-switch-sampler
-        docker run -i \
-        -v $(pwd)/ldms-slingshot-switch-sampler:/ldms-slingshot-switch-sampler:rw ${DOCKER_IMAGE} \
-        cp -Rf /ovis-ldms-debian-package/* /ldms-slingshot-switch-sampler/.
-        echo ":white_check_mark: Artifacts staged to bindmount" >> $GITHUB_STEP_SUMMARY
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: list directory contents of ldms-slingshot-switch-sampler
-      if: success()
-      id: list
-      run: |
-        ls -al ldms-slingshot-switch-sampler
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+#        with:
+#          platforms: 'linux/arm64'
         
+      - name: Set up Docker Buildx      
+        uses: docker/setup-buildx-action@v3    
+#        with:        
+#          version: latest  
 
+      - name: Prepare
+        if: success()
+        id: prepare
+        run: |
+          echo "docker_image=${DOCKER_REGISTRY}/${DOCKER_IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "buildx_version=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "docker_platform=${( matrix.platform }}" >> "$GITHUB_OUTPUT"
+          echo "ovis_release=${OVIS_RELEASE}" >> "$GITHUB_OUTPUT"
+          echo ":white_check_mark: Prepare Step Successful" >> $GITHUB_STEP_SUMMARY
+
+      - name: Docker Login
+        if: success()
+        id: login
+        run: |
+          echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
+          echo ":white_check_mark: Docker Login Successful" >> $GITHUB_STEP_SUMMARY
+
+#      - name: Build Debian Package
+#        if: success()
+#        id: build
+#        env:
+#          GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
+#          GPG_EMAIL: ${{ secrets.GPG_EMAIL }}
+ #         GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+ #         GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
+ #         GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+ #       run: |
+ #         docker buildx build \
+ #         --platform ${{ steps.prepare.outputs.docker_platform }} \
+ #         --tag ${{ steps.prepare.outputs.docker_image }} \
+ #         --provenance false \
+ #         --sbom false \
+ #         --file ./Dockerfile \
+ #         --output "type=image,push=true" .
+ #         echo ":white_check_mark: ovis-ldms_4.4.3-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
+      - name: Build and push by digest
+        if: success()
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+      
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ env.PLATFORM_TARGET_PLATFORM }}
+          if-no-files-found: error
+          retentions-days: 1
+          
+    artifacts:
+      runs-on: ubuntu-20.04
+      needs:
+        - build
+        
+      steps:
+        - name: Download digests
+          uses: actions/download-artifact@v4
+          with:
+            path: /tmp/digests
+            pattern: digests-*
+            merge-multiple: true
+        - name: Setup Docker Buildx
+          uses: docker/setup-buildx-action@v3
+
+        - name: Docker meta
+          id: meta
+          uses: docker/metadata-action@v5
+          with:
+            images: ${{ env.REGISTRY_IMAGE }}
+
+        - name: Login to Docker Hub
+          uses: docker/login-actions@v3
+          with:
+            username: ${{ secrets:DOCKERHUB_USERNAME }}
+            password: ${{ secrets:DOCKERHUB_PASSWORD }}
+
+        - name: Create manifest list and push
+          working-directory: /tmp/digests
+          run: |
+            docker buildx imagetools create $(jq -cr '.tags | map("-t" + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+              $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *) 
+
+        - name: Inspect image
+          run: |
+            docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+
+    uploadpackage:
+      runs-on: ubuntu-20.04
+      needs:
+        - artifacts
+
+      steps:
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@v3
+          with:
+            platforms: 'linux/arm64'
+ 
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v3
+      
+        - name: Login to Docker Hub
+          uses: docker/login-action@v3
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+        - name: Stage artifacts to bindmount
+          if: success()
+          id: stage
+          run: |
+            mkdir -p ldms-slingshot-switch-sampler
+            sudo chmod -R 777 $(pwd)/ldms-slingshot-switch-sampler
+            docker run -i \
+            -v $(pwd)/ldms-slingshot-switch-sampler:/ldms-slingshot-switch-sampler:rw ${DOCKER_IMAGE} \
+            cp -Rf /ovis-ldms-debian-package/* /ldms-slingshot-switch-sampler/.
+            echo ":white_check_mark: Artifacts staged to bindmount" >> $GITHUB_STEP_SUMMARY
+
+        - name: list directory contents of ldms-slingshot-switch-sampler
+          if: success()
+          id: list
+          run: |
+            ls -al ldms-slingshot-switch-sampler
+            
+        - name: Upload artifact
+          if: success()
+          id: upload
+          uses: actions/upload-artifact@v3.2.1-node20
+          with:
+            name: ovis-${{ steps.prepare.outputs.ovis_release }}-arm64_slingshot-switch-sampler
+            path: /ldms-slingshot-switch-sampler
+            if-no-files-found: error
+            retention-days: 1
+            include-hidden-files: true
+ 
+        - name: Artifact Upload Confirmation
+          if: success()
+          run: |
+            echo ":white_check_mark: ovis-ldms_4.4.3-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY
+        
 #    - name: Build Test Server
 #      if: success()
 #      run: |
@@ -138,19 +249,3 @@ jobs:
 
 #    - name: Test APT repo
 
-            
-    - name: Upload artifact
-      if: success()
-      id: upload
-      uses: actions/upload-artifact@v3.2.1-node20
-      with:
-        name: ovis-${{ steps.prepare.outputs.ovis_release }}-arm64_slingshot-switch-sampler
-        path: /ldms-slingshot-switch-sampler
-        if-no-files-found: error
-        retention-days: 1
-        include-hidden-files: true
- 
-    - name: Artifact Upload Confirmation
-      if: success()
-      run: |
-        echo ":white_check_mark: ovis-ldms_4.4.3-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY
