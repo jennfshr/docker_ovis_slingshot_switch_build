@@ -58,7 +58,7 @@ jobs:
       - name: Platform
         run: |
           platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >>$GITHUB_ENV
+          echo "PLATFORM_PAIR=${platform//\/-}" >>$GITHUB_ENV
     
       - name: Docker meta
         id: meta
