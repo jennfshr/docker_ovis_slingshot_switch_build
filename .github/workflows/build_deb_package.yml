@@ -57,9 +57,8 @@ jobs:
     steps:
       - name: Platform
         run: |
+          echo "${{ matrix.platform}} is matrix platform"
           platform=${{ matrix.platform }}
-          echo "${platform//\//-}"
-          echo "${platform}"
           echo "PLATFORM_PAIR=${platform//\//-}" >>$GITHUB_ENV
     
       - name: Docker meta
