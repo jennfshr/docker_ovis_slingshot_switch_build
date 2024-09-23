@@ -5,18 +5,7 @@ on:
     branches: [ "debian", "tidy" ] 
   pull_request:
     branches: [ "debian" ]
-env:      
-  DOCKER_REGISTRY: docker.io
-  DOCKER_IMAGE: jkgreen76/ldms-slingshot-switch-sampler:latest
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-  GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
-  GPG_EMAIL: ${{ secrets.GPG_EMAIL }}
-  GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-  GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
-  GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-  OVIS_RELEASE: v4.4.3
-  
+ 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch: 
     inputs:
@@ -41,7 +30,18 @@ env:
         description: 'Environment to run tests against'
         type: environment
         required: true
-    
+env:      
+  DOCKER_REGISTRY: docker.io
+  DOCKER_IMAGE: jkgreen76/ldms-slingshot-switch-sampler:latest
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
+  GPG_EMAIL: ${{ secrets.GPG_EMAIL }}
+  GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+  GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
+  GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+  OVIS_RELEASE: v4.4.3
+  
 jobs:
   build:
     runs-on: ubuntu-20.04
