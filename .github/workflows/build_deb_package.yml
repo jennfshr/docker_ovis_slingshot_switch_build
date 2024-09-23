@@ -163,8 +163,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-actions@v3
         with:
-          username: ${{ secrets:DOCKERHUB_USERNAME }}
-          password: ${{ secrets:DOCKERHUB_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
