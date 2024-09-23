@@ -5,7 +5,17 @@ on:
     branches: [ "debian", "tidy" ] 
   pull_request:
     branches: [ "debian" ]
-
+  env:      
+    DOCKER_REGISTRY: docker.io
+    DOCKER_IMAGE: jkgreen76/ldms-slingshot-switch-sampler:latest
+    DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+    DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
+    GPG_EMAIL: ${{ secrets.GPG_EMAIL }}
+    GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+    GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
+    GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+    OVIS_RELEASE: v4.4.3
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch: 
     inputs:
@@ -42,23 +52,12 @@ jobs:
           - linux/arm/v6
           - linux/arm/v7
           - linux/arm64
-    env:      
-      DOCKER_REGISTRY: docker.io
-      DOCKER_IMAGE: jkgreen76/ldms-slingshot-switch-sampler:latest
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
-      GPG_EMAIL: ${{ secrets.GPG_EMAIL }}
-      GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-      GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
-      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      OVIS_RELEASE: v4.4.3
-
+    
     steps:
       - name: Platform
         run: |
           platform=${{ matrix.platform }}
-          echo "DOCKER_TARGET_PLATFORM=${platform//\//-}" >>$GITHUB_ENV
+          echo "PLATFORM_PAIR=${platform//\//-}" >>$GITHUB_ENV
     
       - name: Docker meta
         id: meta
