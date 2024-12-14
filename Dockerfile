@@ -1,4 +1,5 @@
-FROM ubuntu:20.04
+# Build OVIS Debian Package
+FROM ubuntu:20.04 AS build-stage
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 RUN apt update \
@@ -24,7 +25,6 @@ RUN apt update \
        dpkg-sig \
        vim
 RUN bash <<EOF
-set -x && \
 mkdir -p ovis-ldms-debian-package && \
 cd ovis-ldms-debian-package && \
 export DEBEMAIL="jkgreen@sandia.gov" && \
@@ -71,7 +71,29 @@ Description: LDMS for SlingShot Switches
 cat \$PWD/debian/control && \
 echo "13" > \$PWD/debian/compat && \
 echo -e "\\tdh_auto_configure -- --disable-infiniband --disable-papi --disable-opa2 --disable-tx2mon --disable-static --disable-perf --disable-store --disable-flatfile --disable-csv --disable-lustre --disable-clock --disable-synthetic --disable-varset --disable-lnet_stats --disable-gpumetrics --disable-coretemp --disable-array_example --disable-hello_stream --disable-blob_stream --disable-procinterrupts --disable-procnet --disable-procnetdev --disable-procnfs --disable-dstat --disable-procstat --disable-llnl-edac --disable-tsampler --disable-cray_power_sampler --disable-loadavg --disable-vmstat --disable-procdiskstats --disable-spaceless_names --disable-generic_sampler --disable-jobinfo-sampler --disable-app-sampler --disable-readline --with-slurm=no --disable-ibnet --disable-timescale-store --enable-slingshot_switch" >>\$PWD/debian/rules && \
-cat \$PWD/debian/rules && debuild -uc -us && \
+cat \$PWD/debian/rules && \
+debuild -uc -us
+EOF
+
+# Create Debian Repository and GPG Sign Debian Package
+FROM ubuntu:20.04 AS sign-stage
+COPY --from=build-stage /ovis-ldms-debian-package /ovis-ldms-debian-package
+ARG DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
+RUN apt update \
+    && apt list --upgradable \
+    && apt install -y \
+       bash \
+       ca-certificates \
+       dpkg-dev \
+       dpkg-sig \
+       gnupg \
+       gnupg-utils \
+       gpg-agent \
+       gpgconf \
+       gpg
+RUN bash <<EOF
+set -x && \
 printf 'do_hash() {\n  HASH_NAME=\$1\n  HASH_CMD=\$2\n  echo "\${HASH_NAME}:"\n  for f in \$(find -type f); do\n    f=\$(echo \$f | cut -c3-)\n    if [ "\$f" = "Release" ]; then\n      continue\n    fi\n    echo " \$(\${HASH_CMD} \${f}  | cut -d" " -f1) \$(wc -c \$f)"\n  done\n}\n' >> /root/.bash_custom_functions && \
 source /root/.bash_custom_functions && \
 mkdir -p /root/ovis-ldms/apt-repo/dists/stable/main/binary-arm64 && \
@@ -116,3 +138,10 @@ echo "<<<<<<<<<<< Checking gnupg files \$(ls -al /root/.gnupg) >>>>>>>>>>>>>>>>>
 #dpkg-sig -k \${GPG_KEY[1]} --gpg-options '--passphrase-file /root/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.3-1_arm64.deb 
 echo "early termination for debug"
 EOF
+
+#FROM ubuntu/nginx AS install-stage
+#COPY --from=sign-stage /ovis-ldms-debian-package /ovis-ldms-debian-package
+#COPY --from=sign-stage /root/.gnupg /root/.gnupg
+#ARG DEBIAN_FRONTEND=noninteractive
+#SHELL ["/bin/bash", "-c"]
+
