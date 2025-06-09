@@ -22,7 +22,8 @@ RUN apt update \
        python3 \
        python3-dev \
        ca-certificates \
-       dpkg-sig \
+       debsig-verify \
+       debsigs \
        vim
 RUN bash <<EOF
 mkdir -p ovis-ldms-debian-package && \
