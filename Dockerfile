@@ -15,6 +15,8 @@ RUN apt update \
        less \
        lintian \
        libssl-dev \
+       libjansson4 \
+       libjansson-dev \
        libtool \
        make \
        git \
@@ -49,6 +51,7 @@ Build-Depends:
  devscripts [arm64],
  dh-make [arm64],
  flex [arm64],
+ libjansson4 [arm64],
  less [arm64],
  lintian [arm64],
  libssl-dev [arm64],
