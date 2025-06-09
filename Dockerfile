@@ -84,9 +84,10 @@ RUN apt update \
     && apt list --upgradable \
     && apt install -y \
        bash \
+       debsig-verify \
+       debsigs \
        ca-certificates \
        dpkg-dev \
-       dpkg-sig \
        gnupg \
        gnupg-utils \
        gpg-agent \
@@ -135,7 +136,7 @@ tty=/usr/bin/tty && \
 export GPG_TTY=\$tty && \
 ls -al ovis-ldms_4.4.5-1_arm64.deb && \
 echo "\$(pwd)/ovis-ldms_4.4.5-1_arm64.deb is \$(file ovis-ldms_4.4.5-1_arm64.deb)" && \
-dpkg-sig -k \${GPG_KEY[1]} --gpg-options '--passphrase-file /root/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.5-1_arm64.deb 
+debsig -k \${GPG_KEY[1]} --gpg-options '--passphrase-file /root/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.5-1_arm64.deb 
 EOF
 
 #FROM ubuntu/nginx AS install-stage
