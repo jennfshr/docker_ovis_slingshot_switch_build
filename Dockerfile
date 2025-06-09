@@ -1,5 +1,5 @@
 # Build OVIS Debian Package
-FROM ubuntu:20.04 AS build-stage
+FROM ubuntu:24.04 AS build-stage
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 RUN apt update \
@@ -76,7 +76,7 @@ debuild -uc -us
 EOF
 
 # Create Debian Repository and GPG Sign Debian Package
-FROM ubuntu:20.04 AS sign-stage
+FROM ubuntu:24.04 AS sign-stage
 COPY --from=build-stage /ovis-ldms-debian-package /ovis-ldms-debian-package
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
