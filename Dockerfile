@@ -33,9 +33,9 @@ RUN apt-get update \
        debsig-verify \
        debsigs \
        vim \
-    && pip3 install argparse \
     && apt-get clean -y
 RUN bash <<EOF
+which pip3 && \
 mkdir -p ovis-ldms-debian-package && \
 cd ovis-ldms-debian-package && \
 export DEBEMAIL="jkgreen@sandia.gov" && \
