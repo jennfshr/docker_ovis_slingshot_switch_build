@@ -33,7 +33,7 @@ RUN apt-get update \
        debsig-verify \
        debsigs \
        vim \
-    && pip install argparse \
+    && pip3 install argparse \
     && apt-get clean -y
 RUN bash <<EOF
 mkdir -p ovis-ldms-debian-package && \
