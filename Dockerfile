@@ -31,8 +31,7 @@ RUN apt-get update \
        ca-certificates \
        debsig-verify \
        debsigs \
-       vim \
-    && apt-get clean -y
+       vim
 RUN bash <<EOF
 which pip3 && \
 mkdir -p ovis-ldms-debian-package && \
