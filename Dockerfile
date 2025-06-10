@@ -2,9 +2,14 @@
 FROM ubuntu:24.04 AS build-stage
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
-RUN apt update \
-    && apt list --upgradable \
-    && apt install -y \
+
+RUN apt-get update \
+&& apt-get upgrade -y \
+&& apt-get clean -y
+
+RUN apt-get update \
+    && apt-get list --upgradable \
+    && apt-get install -y \
        autoconf \
        bash \
        bison \
@@ -23,10 +28,13 @@ RUN apt update \
        pkg-config \
        python3 \
        python3-dev \
+       python3-pip \
        ca-certificates \
        debsig-verify \
        debsigs \
-       vim
+       vim \
+    && pip install argparse \
+    && apt-get clean -y
 RUN bash <<EOF
 mkdir -p ovis-ldms-debian-package && \
 cd ovis-ldms-debian-package && \
@@ -85,8 +93,8 @@ COPY --from=build-stage /ovis-ldms-debian-package /ovis-ldms-debian-package
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 RUN apt update \
-    && apt list --upgradable \
-    && apt install -y \
+    && apt-get list --upgradable \
+    && apt-get install -y \
        bash \
        debsig-verify \
        debsigs \
@@ -96,7 +104,8 @@ RUN apt update \
        gnupg-utils \
        gpg-agent \
        gpgconf \
-       gpg
+       gpg \
+    && apt-get clean -y
 RUN bash <<EOF
 set -x && \
 printf 'do_hash() {\n  HASH_NAME=\$1\n  HASH_CMD=\$2\n  echo "\${HASH_NAME}:"\n  for f in \$(find -type f); do\n    f=\$(echo \$f | cut -c3-)\n    if [ "\$f" = "Release" ]; then\n      continue\n    fi\n    echo " \$(\${HASH_CMD} \${f}  | cut -d" " -f1) \$(wc -c \$f)"\n  done\n}\n' >> /root/.bash_custom_functions && \
