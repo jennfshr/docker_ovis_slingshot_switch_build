@@ -7,8 +7,7 @@ RUN apt-get update \
 && apt-get upgrade -y \
 && apt-get clean -y
 
-RUN apt-get update \
-    && apt-get list --upgradable \
+RUN apt-get list --upgradable \
     && apt-get install -y \
        autoconf \
        bash \
