@@ -57,8 +57,9 @@ jobs:
       - name: Platform
         run: |
           platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >>$GITHUB_ENV
-    
+          echo "PLATFORM_PAIR=${platform}" >>$GITHUB_ENV
+
+    # removed platform rex s/\//-/g for testing
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
