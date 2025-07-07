@@ -31,9 +31,13 @@ RUN apt list --upgradable \
        debsig-verify \
        debsigs \
        vim
+
 RUN bash <<EOF
 which pip3 && \
-pip3 install python-argparse && \
+pip3 install python-argparse
+EOF
+
+RUN base <<EOF
 mkdir -p ovis-ldms-debian-package && \
 cd ovis-ldms-debian-package && \
 export DEBEMAIL="jkgreen@sandia.gov" && \
