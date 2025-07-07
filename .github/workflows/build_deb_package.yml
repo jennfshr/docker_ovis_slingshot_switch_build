@@ -95,27 +95,28 @@ jobs:
           echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
           echo ":white_check_mark: Docker Login Successful" >> $GITHUB_STEP_SUMMARY
 
-#      - name: Build Debian Package
-#        if: success()
-#        id: build
-#        env:
-#          GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
-#          GPG_EMAIL: ${{ secrets.GPG_EMAIL }}
- #         GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
- #         GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
- #         GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
- #       run: |
- #         docker buildx build \
- #         --platform ${{ steps.prepare.outputs.docker_platform }} \
- #         --tag ${{ steps.prepare.outputs.docker_image }} \
- #         --provenance false \
- #         --sbom false \
- #         --file ./Dockerfile \
- #         --output "type=image,push=true" .
- #         echo ":white_check_mark: ovis-ldms_4.4.3-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
-      - name: Build and push by digest
+      - name: Build Debian Package
         if: success()
         id: build
+        env:
+          GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
+          GPG_EMAIL: ${{ secrets.GPG_EMAIL }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+          GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          docker buildx build \
+          --platform ${{ steps.prepare.outputs.docker_platform }} \
+          --tag ${{ steps.prepare.outputs.docker_image }} \
+          --provenance false \
+          --sbom false \
+          --file ./Dockerfile \
+          --output "type=image,push=true" .
+          echo ":white_check_mark: ovis-ldms_4.4.3-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Build and push by digest
+        if: success()
+        id: build_push
         uses: docker/build-push-action@v6
         with:
           platforms: ${{ matrix.platform }}
