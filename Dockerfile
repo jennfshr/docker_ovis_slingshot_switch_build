@@ -33,7 +33,7 @@ RUN apt list --upgradable \
        debsigs \
        vim
 
-RUN base <<EOF
+RUN bash <<EOF
 mkdir -p ovis-ldms-debian-package && \
 cd ovis-ldms-debian-package && \
 export DEBEMAIL="jkgreen@sandia.gov" && \
