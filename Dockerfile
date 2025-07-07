@@ -27,15 +27,11 @@ RUN apt list --upgradable \
        pkg-config \
        python3 \
        python3-dev \
+       libpython3-stdlib \
        ca-certificates \
        debsig-verify \
        debsigs \
        vim
-
-RUN bash <<EOF
-which pip3 && \
-pip3 install python-argparse
-EOF
 
 RUN base <<EOF
 mkdir -p ovis-ldms-debian-package && \
