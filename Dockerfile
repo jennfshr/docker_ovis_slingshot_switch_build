@@ -16,7 +16,10 @@ RUN apt list --upgradable \
        devscripts \
        dh-make \
        flex \
+       infiniband-diags \
        less \
+       libibmad-dev \
+       libibumad-dev \       
        lintian \
        libssl-dev \
        libjansson4 \
@@ -57,6 +60,9 @@ Build-Depends:
  devscripts [arm64],
  dh-make [arm64],
  flex [arm64],
+ infiniband-diags [arm64],
+ libibmad5 [arm64],
+ libibumad3 [arm64],
  libjansson4 [arm64],
  less [arm64],
  lintian [arm64],
