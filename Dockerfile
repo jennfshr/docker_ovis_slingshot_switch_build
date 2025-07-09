@@ -24,13 +24,16 @@ RUN apt list --upgradable \
        libssl-dev \
        libjansson4 \
        libjansson-dev \
+       libpython3-dev \
+       libpython3-stdlib \
        libtool \
        make \
        git \
        pkg-config \
        python3 \
        python3-dev \
-       libpython3-stdlib \
+       python3-minimal \
+       python3-packaging \
        ca-certificates \
        debsig-verify \
        debsigs \
@@ -44,6 +47,9 @@ export DEBFULLNAME="Jennifer K. Green" && \
 export DEB_BUILD_OPTIONS='parallel=16' && \
 echo "Cloning ovis" && \
 git clone http://github.com/ovis-hpc/ovis.git -b v4.4.5 ovis-ldms-4.4.5 && \
+sed -i 's/distutils/packaging/g' ovis-ldms-4.4.5/m4/ax_python_module_version.m4 && \
+sed -i 's/StrictVersion/Version/g' ovis-ldms-4.4.5/m4/ax_python_module_version.m4 && \
+cat ovis-ldms-4.4.5/m4/ax_python_module_version.m4 && \
 tar cfJ ovis-ldms-4.4.5.tar.xz ovis-ldms-4.4.5 && \
 cd ovis-ldms-4.4.5 && \
 dh_make -i -y -f ../ovis-ldms-4.4.5.tar.xz -e jkgreen@sandia.gov -c bsd && \
