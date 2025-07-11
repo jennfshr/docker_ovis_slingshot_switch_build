@@ -88,12 +88,16 @@ jobs:
           echo "docker_platform=${PLATFORM_PAIR}" >> "$GITHUB_OUTPUT"
           echo "ovis_release=${OVIS_RELEASE}" >> "$GITHUB_OUTPUT"
           echo ":white_check_mark: Prepare Step Successful" >> $GITHUB_STEP_SUMMARY
-
-      - name: Docker Login
+     
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+ 
+      - name: Docker Login Success Output
         if: success()
-        id: login
         run: |
-          echo "${DOCKER_PASSWORD}" | docker login ${DOCKER_REGISTRY} --username "${DOCKER_USERNAME}" --password-stdin
           echo ":white_check_mark: Docker Login Successful" >> $GITHUB_STEP_SUMMARY
 
       - name: Build Debian Package
@@ -182,7 +186,6 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - build
-
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -196,8 +199,13 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Docker Login Success Output
+        if: success()
+        run: |
+          echo ":white_check_mark: Docker Login Successful" >> $GITHUB_STEP_SUMMARY
+          
       - name: Stage artifacts to bindmount
         if: success()
         id: stage
