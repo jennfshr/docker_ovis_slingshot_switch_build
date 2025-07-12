@@ -49,7 +49,7 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - 'linux/arm64'
+          - 'linux/arm64/v3'
       #  - 'linux/amd64'
       #  - 'linux/arm/v6'
       #  - 'linux/arm/v7'    
@@ -72,7 +72,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: 'linux/arm64'
+          platforms: 'linux/arm64/v3'
         
       - name: Set up Docker Buildx      
         uses: docker/setup-buildx-action@v3    
@@ -211,17 +211,17 @@ jobs:
         id: stage
         run: |
           mkdir -p ldms-slingshot-switch-sampler
-          sudo chmod -R 777 $(pwd)/ldms-slingshot-switch-sampler
+          sudo chmod -R 777 ldms-slingshot-switch-sampler
           docker run -i \
-          -v $(pwd)/ldms-slingshot-switch-sampler:/ldms-slingshot-switch-sampler:rw ${DOCKER_IMAGE} \
-          cp -Rf /ovis-ldms-debian-package/* /ldms-slingshot-switch-sampler/.
+          -v `pwd`/ovis-ldms-debian-package:/ovis-ldms-debian-package:rw ${DOCKER_IMAGE} \
+          cp -Rf ovis-ldms-debian-package/* ovis-ldms-debian-package/.
           echo ":white_check_mark: Artifacts staged to bindmount" >> $GITHUB_STEP_SUMMARY
 
-      - name: list directory contents of ldms-slingshot-switch-sampler
+      - name: list directory contents
         if: success()
         id: list
         run: |
-          ls -al ldms-slingshot-switch-sampler
+          ls -al ovis-ldms-debian-package
             
       - name: Upload artifact
         if: success()
@@ -229,7 +229,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ovis-${{ steps.prepare.outputs.ovis_release }}-arm64_slingshot-switch-sampler
-          path: /ovis-ldms-debian-package/
+          path: ovis-ldms-debian-package/
           if-no-files-found: error
           retention-days: 1
           include-hidden-files: true
