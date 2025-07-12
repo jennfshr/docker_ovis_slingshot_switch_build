@@ -229,7 +229,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ovis-${{ steps.prepare.outputs.ovis_release }}-arm64_slingshot-switch-sampler
-          path: /ldms-slingshot-switch-sampler
+          path: /ovis-ldms-debian-package/
           if-no-files-found: error
           retention-days: 1
           include-hidden-files: true
