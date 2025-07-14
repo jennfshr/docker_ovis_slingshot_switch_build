@@ -119,7 +119,23 @@ jobs:
           --file ./Dockerfile \
           --output "type=image,push=true" .
           echo ":white_check_mark: ovis-ldms_4.4.3-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
-      
+
+      - name: Upload artifact
+        if: success()
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ovis-${{ steps.prepare.outputs.ovis_release }}-arm64_slingshot-switch-sampler
+          path: ovis-ldms-debian-package/
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
+          overwrite: true
+ 
+      - name: Artifact Upload Confirmation
+        if: success()
+        run: |
+          echo ":white_check_mark: ovis-ldms_4.4.5-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY
 #      - name: Build and push by digest
 #        if: success()
 #        id: build_push
@@ -183,24 +199,24 @@ jobs:
 #        run: |
 #          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
 #
-  uploadpackage:
-    runs-on: ubuntu-24.04
-    needs:
-      - build
-    steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+#  uploadpackage:
+#    runs-on: ubuntu-24.04
+#    needs:
+#      - build
+#    steps:
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@v3
 #        with:
 #          platforms: 'linux/arm64'
- 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+# 
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v3
+#      
+#      - name: Login to Docker Hub
+#        uses: docker/login-action@v3
+#        with:
+#          username: ${{ secrets.DOCKER_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker Login Success Output
         if: success()
