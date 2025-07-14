@@ -1,5 +1,5 @@
 # Build OVIS Debian Package
-FROM ubuntu:24.04 AS build-stage
+FROM ubuntu-24.04 AS build-stage
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
