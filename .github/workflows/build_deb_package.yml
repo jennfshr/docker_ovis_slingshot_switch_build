@@ -120,18 +120,13 @@ jobs:
           --output "type=image,push=true" .
           echo ":white_check_mark: ovis-ldms_4.4.3-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
 
-      - name: Tar Artifact
-        if: success()
-        id: tarball
-        run: tar cvfJ ovis-ldms-debian-package.tar.xz ovis-ldms-debian-package/  
-      
       - name: Upload artifact
         if: success()
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: ovis-${{ steps.prepare.outputs.ovis_release }}-arm64_slingshot-switch-sampler
-          path: ovis-ldms-debian-package.tar.xz
+          name: ovis-ldms-debian-package
+          path: .
           if-no-files-found: error
           retention-days: 1
           include-hidden-files: true
@@ -140,7 +135,7 @@ jobs:
       - name: Artifact Upload Confirmation
         if: success()
         run: |
-          echo ":white_check_mark: ovis-ldms_4.4.5-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo ":white_check_mark: ovis-ldms_4.4.5-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY      
 #      - name: Build and push by digest
 #        if: success()
 #        id: build_push
