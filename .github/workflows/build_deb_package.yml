@@ -125,12 +125,14 @@ jobs:
           echo ":white_check_mark: ovis-ldms_4.4.5-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
 
       - name: Stage artifacts to bindmount
+        continue-on-error: true
         run: |
+          ls -altr
           mkdir -p ldms-slingshot-sampler
           sudo chmod -R 777 $(pwd)/ldms-slingshot-sampler
           docker run -i \
           -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${DOCKER_IMAGE} \
-          cp -Rf /ovis-ldms-debian-package/* /ldms-slingshot-sampler/.
+          cp -Rf ovis-ldms-debian-package/* /ldms-slingshot-sampler/.
 
       - name: create-repo
         continue-on-error: true
