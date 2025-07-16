@@ -157,7 +157,7 @@ jobs:
 
       - name: Upload artifact
         continue-on-error: true
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ldms-slingshot-sampler
           path: ldms-slingshot-sampler
