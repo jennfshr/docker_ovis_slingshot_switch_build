@@ -145,7 +145,7 @@ jobs:
       
       - name: upload pages artifact
         continue-on-error: true
-        uses: action/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v3
         with:
           name: github-pages
           path: ${{ steps.create-apt-repo.outputs.dir }}
@@ -157,7 +157,7 @@ jobs:
 
       - name: Upload artifact
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: ldms-slingshot-sampler
           path: ldms-slingshot-sampler
