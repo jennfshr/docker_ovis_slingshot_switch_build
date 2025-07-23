@@ -124,18 +124,24 @@ jobs:
           --output "type=image,push=true" .
           echo ":white_check_mark: ovis-ldms_4.4.5-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
 
-      - name: Stage artifacts to bindmount
-        continue-on-error: true
-        run: |
-          ls -altr
-          mkdir -p ldms-slingshot-sampler
-          sudo chmod -R 777 $(pwd)/ldms-slingshot-sampler
-          docker run -i \
-          -v $(pwd)/ldms-slingshot-sampler:/ldms-slingshot-sampler:rw ${DOCKER_IMAGE} \
-          cp -Rf ovis-ldms-debian-package/* /ldms-slingshot-sampler/.
-
+      - name: Extract .deb package from Docker image
+        uses: shrink/actions-docker-extract@v3
+        id: extract
+        with:
+          image: ${DOCKER_IMAGE}
+          path: /ovis-ldms-debian-package/ovis-ldms_4.4.5-1_arm64.deb
+          destination: ovis-ldms-v4.4.5-slingshot-switch-sampler.ubuntu24.04.arm64/.
+     
+      - name: Upload artifact
+        continue-on-error: false
+        uses: actions/upload-artifact@v4
+        with:
+          name: ovis-ldms-v4.4.5-slingshot-switch-sampler.ubuntu24.04.arm64
+          path: ovis-ldms-v4.4.5-slingshot-switch-sampler.ubuntu24.04.arm64
+          overwrite: true
+          
       - name: create-repo
-        continue-on-error: true
+        continue-on-error: false
         uses: morph027/apt-repo-action@v2
         id: create-apt-repo
         with:
@@ -146,7 +152,7 @@ jobs:
           architectures: ${{ env.ARCHITECTURE }}
       
       - name: upload pages artifact
-        continue-on-error: true
+        continue-on-error: false
         uses: actions/upload-pages-artifact@v3
         with:
           name: github-pages
