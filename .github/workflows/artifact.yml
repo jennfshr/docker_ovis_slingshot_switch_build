@@ -105,6 +105,22 @@ jobs:
         run: |
           echo ":white_check_mark: Docker Login Successful" >> $GITHUB_STEP_SUMMARY
 
+      - name: Extract .deb package from Docker image
+        uses: shrink/actions-docker-extract@v3
+        id: extract
+        with:
+          image: ${DOCKER_IMAGE}         # Name:tag or registry URL
+          path: /ovis-ldms-debian-package/ovis-ldms_4.4.5-1_arm64.deb
+          destination: /ldms-slingshot-sampler/.
+     
+      - name: Upload artifact
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ldms-slingshot-sampler
+          path: ldms-slingshot-sampler
+        # e.g. /output/. or /tmp/. (must end with /. to extract contents)
+
       - name: Stage artifacts to bindmount
         continue-on-error: true
         run: |
