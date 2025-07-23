@@ -111,7 +111,7 @@ jobs:
         with:
           image: ${DOCKER_IMAGE}         # Name:tag or registry URL
           path: /ovis-ldms-debian-package/ovis-ldms_4.4.5-1_arm64.deb
-          destination: /ldms-slingshot-sampler/.
+          destination: ldms-slingshot-sampler/.
      
       - name: Upload artifact
         continue-on-error: true
