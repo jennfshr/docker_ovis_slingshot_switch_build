@@ -119,6 +119,7 @@ jobs:
         with:
           name: ldms-slingshot-sampler
           path: ldms-slingshot-sampler
+          overwrite: true
         # e.g. /output/. or /tmp/. (must end with /. to extract contents)
 
     
