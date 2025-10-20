@@ -1,4 +1,4 @@
-name: Package OVIS-LDMS SlingShot Switch Sampler for Debian ARM64
+.name: Package OVIS-LDMS SlingShot Switch Sampler for Debian ARM64
 
 on:
   push:
@@ -130,14 +130,14 @@ jobs:
         with:
           image: ${DOCKER_IMAGE}
           path: /ovis-ldms-debian-package/ovis-ldms_4.4.6-1_arm64.deb
-          destination: ovis-ldms-v4.4.6-slingshot-switch-sampler.ubuntu24.04.arm64/.
+          destination: ovis-ldms-v4.4.6-slingshot-switch-sampler.debian11.arm64/.
      
       - name: Upload artifact
         continue-on-error: false
         uses: actions/upload-artifact@v4
         with:
-          name: ovis-ldms-v4.4.6-slingshot-switch-sampler.ubuntu24.04.arm64
-          path: ovis-ldms-v4.4.6-slingshot-switch-sampler.ubuntu24.04.arm64
+          name: ovis-ldms-v4.4.6-slingshot-switch-sampler.debian11.arm64
+          path: ovis-ldms-v4.4.6-slingshot-switch-sampler.debian11.arm64
           overwrite: true
           
       - name: create-repo
