@@ -42,13 +42,13 @@ env:
   GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
   CODENAME: ovis-ldms
   COMPONENT: main
-  OVIS_RELEASE: v4.4.5
+  OVIS_RELEASE: v4.4.6
   REPO_NAME: ${{ github.event.repository.name }}
   ARCHITECTURE: arm64
   
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: debian-bullseye
     strategy:
       fail-fast: false
       matrix:
@@ -110,7 +110,7 @@ jobs:
         id: extract
         with:
           image: ${DOCKER_IMAGE}         # Name:tag or registry URL
-          path: /ovis-ldms-debian-package/ovis-ldms_4.4.5-1_arm64.deb
+          path: /ovis-ldms-debian-package/ovis-ldms_4.4.6-1_arm64.deb
           destination: ldms-slingshot-sampler/.
      
       - name: Upload artifact
@@ -146,7 +146,7 @@ jobs:
   #     if: success()
         continue-on-error: true
         run: |
-          echo ":white_check_mark: ovis-ldms_4.4.5-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY      
+          echo ":white_check_mark: ovis-ldms_4.4.6-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY      
 #      - name: Build and push by digest
 #        if: success()
 #        id: build_push
@@ -173,7 +173,7 @@ jobs:
 #  meta:
 #    strategy:
 #      fail-fast: false
-#    runs-on: ubuntu-24.04
+#    runs-on: debian-bullseye
 #    needs:
 #      - build
 #        
@@ -211,7 +211,7 @@ jobs:
 #          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
 #
 #  uploadpackage:
-#    runs-on: ubuntu-24.04
+#    runs-on: debian-bullseye
 #    needs:
 #      - build
 #    steps:
@@ -266,14 +266,14 @@ jobs:
 #      - name: Artifact Upload Confirmation
 #        if: success()
 #        run: |
-#          echo ":white_check_mark: ovis-ldms_4.4.5-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY
+#          echo ":white_check_mark: ovis-ldms_4.4.6-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY
 #        
 ##    - name: Build Test Server
 #      if: success()
 #      run: |
 #        docker buildx build \
 #        --platform ${{ steps.prepare.outputs.docker_platform }} \
-#        --tag arm64-ubuntu-apt-webserver \
+#        --tag arm64-debian-apt-webserver \
 #        --provenance false \
 #        --sbom false \
 #        --file ./test-apt-server/Dockerfile \
