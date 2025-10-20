@@ -1,5 +1,5 @@
 # Build OVIS Debian Package
-FROM debian:bullseye-slim AS build-stage
+FROM debian:bullseye AS build-stage
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
@@ -98,7 +98,7 @@ debuild -uc -us
 EOF
 
 ## Create Debian Repository and GPG Sign Debian Package
-#FROM debian:bullseye-slim AS sign-stage
+#FROM debian:bullseye AS sign-stage
 #COPY --from=build-stage /ovis-ldms-debian-package /ovis-ldms-debian-package
 #ARG DEBIAN_FRONTEND=noninteractive
 #SHELL ["/bin/bash", "-c"]
