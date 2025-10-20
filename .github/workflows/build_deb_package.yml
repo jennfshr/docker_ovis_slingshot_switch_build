@@ -42,13 +42,13 @@ env:
   GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
   CODENAME: ovis-ldms
   COMPONENT: main
-  OVIS_RELEASE: v4.4.5
+  OVIS_RELEASE: v4.4.6
   REPO_NAME: ${{ github.event.repository.name }}
   ARCHITECTURE: arm64
   
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
@@ -122,22 +122,22 @@ jobs:
           --sbom false \
           --file ./Dockerfile \
           --output "type=image,push=true" .
-          echo ":white_check_mark: ovis-ldms_4.4.5-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
+          echo ":white_check_mark: ovis-ldms_4.4.6-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
 
       - name: Extract .deb package from Docker image
         uses: shrink/actions-docker-extract@v3
         id: extract
         with:
           image: ${DOCKER_IMAGE}
-          path: /ovis-ldms-debian-package/ovis-ldms_4.4.5-1_arm64.deb
-          destination: ovis-ldms-v4.4.5-slingshot-switch-sampler.ubuntu24.04.arm64/.
+          path: /ovis-ldms-debian-package/ovis-ldms_4.4.6-1_arm64.deb
+          destination: ovis-ldms-v4.4.6-slingshot-switch-sampler.ubuntu24.04.arm64/.
      
       - name: Upload artifact
         continue-on-error: false
         uses: actions/upload-artifact@v4
         with:
-          name: ovis-ldms-v4.4.5-slingshot-switch-sampler.ubuntu24.04.arm64
-          path: ovis-ldms-v4.4.5-slingshot-switch-sampler.ubuntu24.04.arm64
+          name: ovis-ldms-v4.4.6-slingshot-switch-sampler.ubuntu24.04.arm64
+          path: ovis-ldms-v4.4.6-slingshot-switch-sampler.ubuntu24.04.arm64
           overwrite: true
           
       - name: create-repo
@@ -186,7 +186,7 @@ jobs:
   #     if: success()
         continue-on-error: true
         run: |
-          echo ":white_check_mark: ovis-ldms_4.4.5-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY      
+          echo ":white_check_mark: ovis-ldms_4.4.6-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY      
 #      - name: Build and push by digest
 #        if: success()
 #        id: build_push
@@ -213,7 +213,7 @@ jobs:
 #  meta:
 #    strategy:
 #      fail-fast: false
-#    runs-on: ubuntu-24.04
+#    runs-on: ubuntu-20.04
 #    needs:
 #      - build
 #        
@@ -251,7 +251,7 @@ jobs:
 #          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
 #
 #  uploadpackage:
-#    runs-on: ubuntu-24.04
+#    runs-on: ubuntu-20.04
 #    needs:
 #      - build
 #    steps:
@@ -306,7 +306,7 @@ jobs:
 #      - name: Artifact Upload Confirmation
 #        if: success()
 #        run: |
-#          echo ":white_check_mark: ovis-ldms_4.4.5-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY
+#          echo ":white_check_mark: ovis-ldms_4.4.6-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY
 #        
 ##    - name: Build Test Server
 #      if: success()
