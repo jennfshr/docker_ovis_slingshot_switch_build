@@ -1,5 +1,5 @@
 # Build OVIS Debian Package
-FROM ubuntu:24.04 AS build-stage
+FROM debian:bullseye-slim AS build-stage
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
@@ -46,13 +46,13 @@ export DEBEMAIL="jkgreen@sandia.gov" && \
 export DEBFULLNAME="Jennifer K. Green" && \
 export DEB_BUILD_OPTIONS='parallel=16' && \
 echo "Cloning ovis" && \
-git clone http://github.com/ovis-hpc/ovis.git -b v4.4.5 ovis-ldms-4.4.5 && \
-sed -i 's/distutils/packaging/g' ovis-ldms-4.4.5/m4/ax_python_module_version.m4 && \
-sed -i 's/StrictVersion/Version/g' ovis-ldms-4.4.5/m4/ax_python_module_version.m4 && \
-cat ovis-ldms-4.4.5/m4/ax_python_module_version.m4 && \
-tar cfJ ovis-ldms-4.4.5.tar.xz ovis-ldms-4.4.5 && \
-cd ovis-ldms-4.4.5 && \
-dh_make -i -y -f ../ovis-ldms-4.4.5.tar.xz -e jkgreen@sandia.gov -c bsd && \
+git clone http://github.com/ovis-hpc/ovis.git -b v4.4.6 ovis-ldms-4.4.6 && \
+sed -i 's/distutils/packaging/g' ovis-ldms-4.4.6/m4/ax_python_module_version.m4 && \
+sed -i 's/StrictVersion/Version/g' ovis-ldms-4.4.6/m4/ax_python_module_version.m4 && \
+cat ovis-ldms-4.4.6/m4/ax_python_module_version.m4 && \
+tar cfJ ovis-ldms-4.4.6.tar.xz ovis-ldms-4.4.6 && \
+cd ovis-ldms-4.4.6 && \
+dh_make -i -y -f ../ovis-ldms-4.4.6.tar.xz -e jkgreen@sandia.gov -c bsd && \
 [ -f debian/control ] && \
 echo "Source: ovis-ldms
 Priority: optional
@@ -98,7 +98,7 @@ debuild -uc -us
 EOF
 
 ## Create Debian Repository and GPG Sign Debian Package
-#FROM ubuntu:24.04 AS sign-stage
+#FROM debian:bullseye-slim AS sign-stage
 #COPY --from=build-stage /ovis-ldms-debian-package /ovis-ldms-debian-package
 #ARG DEBIAN_FRONTEND=noninteractive
 #SHELL ["/bin/bash", "-c"]
@@ -122,14 +122,14 @@ EOF
 #source /root/.bash_custom_functions && \
 #mkdir -p /root/ovis-ldms/apt-repo/dists/stable/main/binary-arm64 && \
 #mkdir -p /root/ovis-ldms/apt-repo/pool/main && \
-#[ -f /ovis-ldms-debian-package/ovis-ldms_4.4.5-1_arm64.deb ] && \
-#deb_pkg_dir=\$(dirname \$(readlink -f /ovis-ldms-debian-package/ovis-ldms_4.4.5-1_arm64.deb)) && \
-#cp /ovis-ldms-debian-package/ovis-ldms_4.4.5-1_arm64.deb /root/ovis-ldms/apt-repo/pool/main/. && \
+#[ -f /ovis-ldms-debian-package/ovis-ldms_4.4.6-1_arm64.deb ] && \
+#deb_pkg_dir=\$(dirname \$(readlink -f /ovis-ldms-debian-package/ovis-ldms_4.4.6-1_arm64.deb)) && \
+#cp /ovis-ldms-debian-package/ovis-ldms_4.4.6-1_arm64.deb /root/ovis-ldms/apt-repo/pool/main/. && \
 #cd /root/ovis-ldms/apt-repo && \
 #dpkg-scanpackages --arch arm64 pool/ > dists/stable/main/binary-arm64/Packages && \
 #cat dists/stable/main/binary-arm64/Packages | gzip -9 > dists/stable/main/binary-arm64/Packages.gz && \
 #cd dists/stable && \
-#printf "Architectures: arm64\nComponents: main\nDate: \$(date -Ru)\nVersion: 4.4.5-1\nSuite: stable" > Release && \
+#printf "Architectures: arm64\nComponents: main\nDate: \$(date -Ru)\nVersion: 4.4.6-1\nSuite: stable" > Release && \
 #do_hash "MD5Sum" "md5sum" >> Release && \
 #do_hash "SHA1" "sha1sum" >> Release && \
 #do_hash "SHA256" "sha256sum" >> Release && \
@@ -150,16 +150,16 @@ EOF
 #echo -e "$GPG_USERNAME\n$GPG_EMAIL\nNo Comment\no\n" | gpg --batch --command-fd 0 --expert --edit-key \${GPG_KEY[1]} adduid && \
 #echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key \${GPG_KEY[1]} trust && \
 #gpg --list-keys ${GPG_USERNAME} && \
-#cd \${deb_pkg_dir} && file ovis-ldms_4.4.5-1_arm64.deb && \
+#cd \${deb_pkg_dir} && file ovis-ldms_4.4.6-1_arm64.deb && \
 #printf "${GPG_PASSWORD}" > /root/.gnupg/gpg-passwd.txt && \
 #printf "use-agent\npinentry-mode loopback" > /root/.gnupg/gpg.conf && \
 #printf "allow-loopback-pinentry" > /root/.gnupg/gpg-agent.conf && \
 #echo RELOADAGENT | gpg-connect-agent && \
 #tty=/usr/bin/tty && \
 #export GPG_TTY=\$tty && \
-#ls -al ovis-ldms_4.4.5-1_arm64.deb && \
-#echo "\$(pwd)/ovis-ldms_4.4.5-1_arm64.deb is \$(file ovis-ldms_4.4.5-1_arm64.deb)" && \
-#debsig -k \${GPG_KEY[1]} --gpg-options '--passphrase-file /root/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.5-1_arm64.deb 
+#ls -al ovis-ldms_4.4.6-1_arm64.deb && \
+#echo "\$(pwd)/ovis-ldms_4.4.6-1_arm64.deb is \$(file ovis-ldms_4.4.6-1_arm64.deb)" && \
+#debsig -k \${GPG_KEY[1]} --gpg-options '--passphrase-file /root/.gnupg/gpg-passwd.txt' --sign builder ovis-ldms_4.4.6-1_arm64.deb 
 #EOF
 
 #FROM ubuntu/nginx AS install-stage
