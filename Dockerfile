@@ -1,5 +1,5 @@
 # Build OVIS Debian Package
-FROM debian:bullseye AS build-stage
+FROM debian:bullseye
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
@@ -13,6 +13,7 @@ RUN apt list --upgradable \
        bash \
        bison \
        build-essential \
+       cython3 \
        devscripts \
        dh-make \
        flex \
@@ -24,13 +25,14 @@ RUN apt list --upgradable \
        libssl-dev \
        libjansson4 \
        libjansson-dev \
-       libpython3-dev \
+       libpython3.9 \
        libpython3-stdlib \
        libtool \
        make \
        git \
        pkg-config \
-       python3 \
+       python3.9-minimal \
+       python3.9 \
        python3-dev \
        python3-minimal \
        python3-packaging \
@@ -45,6 +47,8 @@ cd ovis-ldms-debian-package && \
 export DEBEMAIL="jkgreen@sandia.gov" && \
 export DEBFULLNAME="Jennifer K. Green" && \
 export DEB_BUILD_OPTIONS='parallel=16' && \
+export PYTHON=/usr/bin/python3.9 && \
+export PYTHON_VERSION=3.9 && \
 echo "Cloning ovis" && \
 git clone http://github.com/ovis-hpc/ovis.git -b v4.4.6 ovis-ldms-4.4.6 && \
 sed -i 's/distutils/packaging/g' ovis-ldms-4.4.6/m4/ax_python_module_version.m4 && \
@@ -72,21 +76,21 @@ Build-Depends:
  libjansson4 [arm64],
  less [arm64],
  lintian [arm64],
+ libpython3.9 [arm64],
  libssl-dev [arm64],
  libtool [arm64],
  make [arm64],
  git [arm64],
  pkg-config [arm64],
- python3 [arm64],
- python3-dev [arm64],
+ python3 [arm64]
 Standards-Version: 4.1.3
 Homepage: https://github.com/ovis-hpc/ovis
 
 Package: ovis-ldms
 Architecture: arm64
 Depends:
- libssl-dev [arm64],
- python3-dev [arm64],
+ libpyton3.9 [arm64],
+ python3.9 [arm64],
  bash [arm64]
 Description: LDMS for SlingShot Switches
 " > \$PWD/debian/control && \
@@ -98,7 +102,7 @@ debuild -uc -us
 EOF
 
 ## Create Debian Repository and GPG Sign Debian Package
-#FROM debian:bullseye AS sign-stage
+#FROM build-stage
 #COPY --from=build-stage /ovis-ldms-debian-package /ovis-ldms-debian-package
 #ARG DEBIAN_FRONTEND=noninteractive
 #SHELL ["/bin/bash", "-c"]
