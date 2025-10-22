@@ -44,12 +44,12 @@ get_func_opts () {
   while getopts "a:A:c:C:D:e:E:h:l:m:p:P:s:S:x:v:V:Z:" opt ; do
     case "${opt}" in
       a) _ldmsd_auth_plugin="${OPTARG}"			;;
-      A) _ldmsd_auth_plugin_conf="-A conf=${OPTARG}"	;;
+      A) _ldmsd_auth_plugin_conf="\"-A conf=${OPTARG}\""	;;
       c) _ldmsd_sampler_config_file="${OPTARG}"		;;
       C) _comp_id="${OPTARG}"				;;
       D) _port_metrics_conf_file="${OPTARG}"		;;
       e) _ldmsd_sampler_env_file="${OPTARG}"		;;
-      E) _ldmsd_sampler_systemd_env_file="${OPTARG}"	;;
+      E) _ldmsd_systemd_env_file="${OPTARG}"	;;
       h) _switch="${OPTARG}"				;;
       l) _ldmsd_log_option="-l ${OPTARG}"		;;
       m) _ldmsd_mem="${OPTARG}"				;;
@@ -154,14 +154,14 @@ find_plugin_path () {
   echo "${_plugin_path}"
 }
 
-gen_ldmsd_env_file () {
+gen_ldmsd_systemd_env_file () {
   get_func_opts "$@"
   local _libdir=$(find_lib_dir ${_top})
   local _python_path=$(find_python_path ${_top})
   local _plugin_path=$(find_plugin_path ${_top})
-  cat <<-LDMSENV>${_ldmsd_sampler_env_file}
+  cat <<-LDMSENV>${_ldmsd_systemd_env_file}
 LD_LIBRARY_PATH=${_libdir}
-PATH=${_top}/sbin:\$PATH
+PATH=${_top}/sbin:/usr/bin:/usr/sbin:\$PATH
 PYTHONPATH=${_python_path}
 LDMSD_PLUGIN_LIBPATH=${_plugin_path}
 ZAP_LIBPATH=${_plugin_path}
@@ -183,17 +183,17 @@ LDMSD_MEM=${_ldmsd_mem}
 LDMSD_VERBOSITY=${_ldmsd_verbose}
 LDMSENV
   tput setaf 2
-  printf "LDMSD Env File Generated at $(readlink -f ${_ldmsd_sampler_env_file})\n"
-  printf "$(cat ${_ldmsd_sampler_env_file})\n"
+  printf "LDMSD Env File Generated at $(readlink -f ${_ldmsd_systemd_env_file})\n"
+  printf "$(cat ${_ldmsd_systemd_env_file})\n"
   tput sgr0
 }
 
-gen_ldmsd_systemd_env_file () {
+gen_ldmsd_env_file () {
   get_func_opts $@
   local _libdir=$(find_lib_dir ${_top})
   local _python_path=$(find_python_path ${_top})
   local _plugin_path=$(find ${_top} -type d -name "ovis-ldms*" -exec readlink -f {} \; | grep -v doc)
-  cat <<-ENV>${_ldmsd_sampler_systemd_env_file}
+  cat <<-ENV>${_ldmsd_sampler_env_file}
 export LD_LIBRARY_PATH=${_libdir}:$LD_LIBRARY_PATH
 export PATH=${_top}/sbin:${_top}/bin:$PATH
 export PYTHONPATH=${_python_path}:$PYTHONPATH
@@ -221,7 +221,7 @@ export LDMSD_VERBOSITY=${_ldmsd_verbose}
 # export LDMSD_LOG_OPTION="${_ldmsd_log_option}"
 
 # Define LDMS Daemon Authentication method
-export LDMSD_AUTH_OPTION="-a ${_ldmsd_auth_plugin}"
+export LDMSD_AUTH_OPTION="${_ldmsd_auth_plugin}"
 #if [[ "${_ldmsd_auth_plugin}" =~ ovis ]] ; then export LDMSD_AUTH_OPTION+="${_ldmsd_auth_plugin_conf}" ; fi
 
 # LDMS plugin configuration file, see ${_top}/etc/ldms/sampler.conf for an example
@@ -229,7 +229,7 @@ export LDMSD_PLUGIN_CONFIG_FILE=${_ldmsd_sampler_config_file}
 ENV
   tput setaf 2
   printf "Generated systemd environment file."
-  printf "$(cat ${_ldmsd_sampler_systemd_env_file})\n"
+  printf "$(cat ${_ldmsd_sampler_env_file})\n"
   tput sgr0
 }
 
@@ -239,12 +239,12 @@ gen_start_file () {
   cat <<-STARTFILE >${_start_file}
 #!/bin/bash
 source ${top}/etc/ldms/ldmsd.sampler.env
-echo "RUNNING: ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_plugin_conf_file} -a ${_ldmsd_auth_plugin} ${_ldmsd_auth_plugin_conf} -v ${_ldmsd_verbose} -m ${_ldmsd_mem} ${_ldmsd_log_option}"
-${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_plugin_conf_file} -a ${_ldmsd_auth_plugin} ${_ldmsd_auth_plugin_conf} -v ${_ldmsd_verbose} -m ${_ldmsd_mem} ${_ldmsd_log_option}
+echo "RUNNING: ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_sampler_config_file} -a ${_ldmsd_auth_plugin} ${_ldmsd_auth_plugin_conf} -v ${_ldmsd_verbose} -m ${_ldmsd_mem} ${_ldmsd_log_option}"
+${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_sampler_config_file} -a ${_ldmsd_auth_plugin} ${_ldmsd_auth_plugin_conf} -v ${_ldmsd_verbose} -m ${_ldmsd_mem} ${_ldmsd_log_option}
 STARTFILE
 chmod +x ${_start_file}
   tput setaf 2
-  printf "Generated ${_start_file}."
+  printf "Generated start script: ${_start_file}\n"
   printf "$(cat ${_start_file})\n"
   tput sgr0
 }
@@ -259,7 +259,7 @@ Documentation = https://ovis-hpc.readthedocs.io/en/latest/
 
 [Service]
 Type = forking
-EnvironmentFile = ${_ldmsd_sampler_systemd_env_file}
+EnvironmentFile = ${_ldmsd_systemd_env_file}
 Environment = HOSTNAME=%H
 ExecStartPre = /bin/mkdir -p ${_top}/var/run/ldmsd
 ExecStart = ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_sampler_config_file} -a ${_ldmsd_auth_plugin} -v ${_ldmsd_verbose} -m ${_ldmsd_mem} -r ${_top}/var/run/ldmsd/sampler.pid ${_ldmsd_log_option} ${_ldmsd_auth_plugin_conf}
@@ -358,28 +358,47 @@ done
 SWITCH=$(get_hostname)
 inform "SWITCH: $SWITCH"
 COMPONENT_ID=$(get_comp_id)
+inform "COMPONENT_ID: ${COMPONENT_ID}"
 first_dir=$(find_script_dir_top $0)
+inform "first_dir: ${first_dir}"
 last_dir=$(find_script_dir_bottom $0)
+inform "last_dir: ${last_dir}"
 TOP=${TOP:=/rwfs/OVIS-slingshot}
+inform "TOP: $TOP"
 PORT_METRICS_CONF_FILE="${TOP}/etc/ldms/${SWITCH}_port_metrics.conf"
+inform "PORT_METRICS_CONF_FILE: ${PORT_METRICS_CONF_FILE}"
 LDMSD_SAMPLER_CONFIG_FILE="${TOP}/etc/ldms/sampler_slingshot_switch.conf"
-LDMSD_SAMPLER_SYSTEMD_ENV_FILE="${TOP}/etc/ldms/ldmsd.sampler.systemd.env"
+inform "LDMSD_SAMPLER_CONFIG_FILE: $LDMSD_SAMPLER_CONFIG_FILE"
+LDMSD_SYSTEMD_ENV_FILE="${TOP}/etc/ldms/ldmsd.sampler.systemd.env"
+inform "LDMSD_SYSTEMD_ENV_FILE: ${LDMSD_SYSTEMD_ENV_FILE}"
 LDMSD_SAMPLER_ENV_FILE="${TOP}/etc/ldms/ldmsd.sampler.env"
+inform "LDMSD_SAMPLER_ENV_FILE: ${LDMSD_SAMPLER_ENV_FILE}"
 START_FILE="${TOP}/etc/ldms/start_slingshot_ldms_sampler.sh"
+inform "START_FILE: ${START_FILE}"
 LDMSD_SYSTEMD_SERVICE_FILE="${TOP}/etc/systemd/system/ldmsd.sampler.service"
+inform "LDMSD_SYSTEMD_SERVICE_FILE: ${LDMSD_SYSTEMD_SERVICE_FILE}"
 SYSTEMD_SERVICE_FILE_DIR=${SYSTEMD_SERVICE_FILE_DIR:=/etc/systemd/system}
+inform "SYSTEMD_SERVICE_FILE_DIR=${SYSTEMD_SERVICE_FILE_DIR}"
 LDMSD_PORT=${LDMSD_PORT:=411}
+inform "LDMSD_PORT: $LDMSD_PORT"
 LDMSD_XPRT=${LDMSD_XPRT:=sock}
-LDMSD_AUTH=${LDMSD_AUTH:=none}
+inform "LDMSD_XPRT: $LDMSD_XPRT"
 LDMSD_MEM=${LDMSD_MEM:=5M}
+inform "LDMSD_MEM: $LDMSD_MEM"
 LDMSD_LOG_OPTION=${LDMSD_LOG_OPTION:=""}
+inform "LDMSD_LOG_OPTION: ${LDMSD_LOG_OPTION}"
 LDMSD_VERBOSE=${LDMSD_VERBOSE:=QUIET}
+inform "LDMSD_VERBOSE: $LDMSD_VERBOSE"
+LDMSD_AUTH_PLUGIN=${LDMSD_AUTH_PLUGIN:="none"}
+inform "LDMSD_AUTH_PLUGIN: $LDMSD_AUTH_PLUGIN"
 if ! [[ "${LDMSD_LOG_OPTION}"x == x ]] ; then
   EXTRA_OPTS=( "-l ${LDMSD_LOG_OPTION}" "${EXTRA_OPTS[@]}" )
 fi
 if ! [[ "${LDMSD_AUTH_PLUGIN_CONF}"x == x ]] ; then
-  EXTRA_OPTS=( "-A ${LDMSD_AUTH_PLUGIN_CONF}" "${EXTRA_OPTS[@]}" )
+  EXTRA_OPTS=( "-A conf=${LDMSD_AUTH_PLUGIN_CONF}" "${EXTRA_OPTS[@]}" )
 fi
+inform "EXTRA_OPTS: ${EXTRA_OPTS[@]}"
+
 inform "Generating port conf file at ${PORT_METRICS_CONF_FILE}"
 pretty_print "
 gen_port_metrics_conf -h \"${SWITCH}\" \
@@ -392,15 +411,17 @@ gen_port_metrics_conf -h "${SWITCH}" \
 inform "Generating ldmsd_sampler_config at ${LDMSD_SAMPLER_CONFIG_FILE}"
 pretty_print "
 gen_ldmsd_sampler_conf -c \"${LDMSD_SAMPLER_CONFIG_FILE}\" \
-	              -h \"${SWITCH}\" \
-		      -C \"${COMPONENT_ID}\" \
-		      -D \"${PORT_METRICS_CONF_FILE}\" \
-		      -v \"${LDMSD_VERBOSE}\" \
-		      -x \"${LDMSD_XPRT}\" \
-		      -m \"${LDMSD_MEM}\"
+                       -a \"${LDMSD_AUTH_PLUGIN}\" \
+	               -h \"${SWITCH}\" \
+		       -C \"${COMPONENT_ID}\" \
+		       -D \"${PORT_METRICS_CONF_FILE}\" \
+		       -v \"${LDMSD_VERBOSE}\" \
+		       -x \"${LDMSD_XPRT}\" \
+		       -m \"${LDMSD_MEM}\"
 "
 sleep 2
 gen_ldmsd_sampler_conf -c "${LDMSD_SAMPLER_CONFIG_FILE}" \
+                       -a "${LDMSD_AUTH_PLUGIN}" \
                        -h "${SWITCH}" \
 		       -C "${COMPONENT_ID}" \
 		       -D "${PORT_METRICS_CONF_FILE}" \
@@ -409,10 +430,11 @@ gen_ldmsd_sampler_conf -c "${LDMSD_SAMPLER_CONFIG_FILE}" \
 		       -m "${LDMSD_MEM}" || die "gen_ldmsd_sampler_conf failed!"
 
 
-inform "Generating ldmsd systemd environment file at ${LDMSD_SAMPLER_SYSTEMD_ENV_FILE}"
+inform "Generating ldmsd systemd environment file at ${LDMSD_SYSTEMD_ENV_FILE}"
 pretty_print "
 gen_ldmsd_systemd_env_file -P \"${TOP}\" \
-                           -E \"${LDMSD_SAMPLER_SYSTEMD_ENV_FILE}\" \
+                           -a \"${LDMSD_AUTH_PLUGIN}\" \
+                           -E \"${LDMSD_SYSTEMD_ENV_FILE}\" \
                            -p \"${LDMSD_PORT}\" \
                            -x \"${LDMSD_XPRT}\" \
                            -m \"${LDMSD_MEM}\" \
@@ -420,7 +442,8 @@ gen_ldmsd_systemd_env_file -P \"${TOP}\" \
                            -c \"${LDMSD_SAMPLER_CONFIG_FILE}\" \"${EXTRA_OPTS[@]}\"
 "
 gen_ldmsd_systemd_env_file -P "${TOP}" \
-                           -E "${LDMSD_SAMPLER_SYSTEMD_ENV_FILE}" \
+                           -a "${LDMSD_AUTH_PLUGIN}" \
+                           -E "${LDMSD_SYSTEMD_ENV_FILE}" \
                            -p "${LDMSD_PORT}" \
                            -x "${LDMSD_XPRT}" \
                            -m "${LDMSD_MEM}" \
@@ -435,7 +458,7 @@ gen_ldmsd_env_file -P \"${TOP}\" \
                    -m \"${LDMSD_MEM}\" \
 	           -e \"${LDMSD_SAMPLER_ENV_FILE}\" \
                    -c \"${LDMSD_SAMPLER_CONFIG_FILE}\" \
-		   -a \"${LDMS_AUTH_PLUGIN}\" \"${EXTRA_OPTS[@]}\"
+		   -a \"${LDMSD_AUTH_PLUGIN}\" \"${EXTRA_OPTS[@]}\"
 "
 
 gen_ldmsd_env_file -P "${TOP}" \
@@ -444,7 +467,7 @@ gen_ldmsd_env_file -P "${TOP}" \
                    -m "${LDMSD_MEM}" \
 	           -e "${LDMSD_SAMPLER_ENV_FILE}" \
                    -c "${LDMSD_SAMPLER_CONFIG_FILE}" \
-		   -a "${LDMS_AUTH_PLUGIN}" "${EXTRA_OPTS[@]}" || die "gen_ldmsd_env_file failed!"
+		   -a "${LDMSD_AUTH_PLUGIN}" "${EXTRA_OPTS[@]}" || die "gen_ldmsd_env_file failed!"
 
 inform "Generating start script at ${START_FILE}"
 pretty_print "
@@ -471,17 +494,18 @@ gen_start_file -s "${START_FILE}" \
 inform "Generating a systemd service file at ${LDMSD_SYSTEMD_SERVICE_FILE}."
 pretty_print "
 gen_systemd_service_file -P \"${TOP}\" \
-                         -E \"${LDMSD_SAMPLER_SYSTEMD_ENV_FILE}\" \
+                         -E \"${LDMSD_SYSTEMD_ENV_FILE}\" \
                          -p \"${LDMSD_PORT}\" \
                          -x \"${LDMSD_XPRT}\" \
                          -m \"${LDMSD_MEM}\" \
                          -v \"${LDMSD_VERBOSE}\" \
 			 -Z \"${LDMSD_SYSTEMD_SERVICE_FILE}\" \
 	                 -V \"${SYSTEMD_SERVICE_FILE_DIR}\" \
+                         -a \"${LDMSD_AUTH_PLUGIN}\" \
                          -c \"${LDMSD_SAMPLER_CONFIG_FILE}\" \"${EXTRA_OPTS[@]}\"
 "
 gen_systemd_service_file -P "${TOP}" \
-                         -E "${LDMSD_SAMPLER_SYSTEMD_ENV_FILE}" \
+                         -E "${LDMSD_SYSTEMD_ENV_FILE}" \
                          -p "${LDMSD_PORT}" \
                          -x "${LDMSD_XPRT}" \
                          -m "${LDMSD_MEM}" \
@@ -489,6 +513,7 @@ gen_systemd_service_file -P "${TOP}" \
 			 -Z "${LDMSD_SYSTEMD_SERVICE_FILE}" \
 	                 -V "${SYSTEMD_SERVICE_FILE_DIR}" \
 			 -Z "${LDMSD_SYSTEMD_SERVICE_FILE}" \
+                         -a "${LDMSD_AUTH_PLUGIN}" \
                          -c "${LDMSD_SAMPLER_CONFIG_FILE}" "${EXTRA_OPTS[@]}" || die "gen_systemd_service_file failed"
 
 inform "LDMS is now configured to run on ${SWITCH}."
