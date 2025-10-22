@@ -3,6 +3,14 @@ FROM debian:bullseye
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
+RUN bash <<EOF
+echo " 
+Acquire::http::Timeout \"190\";
+Acquire::ftp::Timeout \"190\";
+Acquire::Retries \"10\";
+">/etc/apt/apt.conf.d/99timeout
+EOF
+
 RUN apt update \
 && apt upgrade -y \
 && apt clean -y
@@ -88,10 +96,6 @@ Homepage: https://github.com/ovis-hpc/ovis
 
 Package: ovis-ldms
 Architecture: arm64
-Depends:
- libpyton3.9 [arm64],
- python3.9 [arm64],
- bash [arm64]
 Description: LDMS for SlingShot Switches
 " > \$PWD/debian/control && \
 cat \$PWD/debian/control && \

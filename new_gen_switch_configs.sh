@@ -33,12 +33,15 @@ warning () {
 }
 
 pretty_print () {
-  echo "$@" |  tr -s ' '
+  if [[ "${VERBOSE}"x != x ]] ; then
+    printf "$(tput setaf 2)%-100s\n" "$@" |  tr -s ' '
+    tput sgr0
+  fi
 }
 
 get_func_opts () {
   OPTIND=1
-  while getopts "a:A:c:C:D:e:E:h:l:m:p:P:s:S:x:v:Z:" opt ; do
+  while getopts "a:A:c:C:D:e:E:h:l:m:p:P:s:S:x:v:V:Z:" opt ; do
     case "${opt}" in
       a) _ldmsd_auth_plugin="${OPTARG}"			;;
       A) _ldmsd_auth_plugin_conf="-A conf=${OPTARG}"	;;
@@ -56,6 +59,7 @@ get_func_opts () {
       S) _ldmsd_systemctl_service_file="${OPTARG}"      ;;
       x) _ldmsd_xprt="${OPTARG}"			;;
       v) _ldmsd_verbose="${OPTARG}"			;;
+      V) _ldmsd_systemd_service_file_dir="${OPTARG}"	;;
       Z) _ldmsd_systemd_service_file="${OPTARG}"	;;
       *)						;;
     esac
@@ -119,7 +123,7 @@ gen_ldmsd_sampler_conf () {
   local _port_conf_file=""
   cat <<-SAMPCONF >${_ldmsd_sampler_config_file}
 load name=slingshot_switch
-config name=slingshot_switch producer=${_switch} component_id=${_comp_id} instance=${_switch}/port_metrics conffile=${_port_conf_file}
+config name=slingshot_switch producer=${_switch} component_id=${_comp_id} instance=${_switch}/port_metrics conffile=${_port_metrics_conf_file}
 start name=slingshot_switch interval=1000000
 SAMPCONF
 
@@ -260,12 +264,14 @@ SYSTEMD
   # Create symbolic link to new service file if link doesn't exist
   if [[ -h ${_systemd_service_file_dir}/ldmsd.sampler.service ]] ; then
     inform "${_systemd_service_file_dir}/ldmsd.sampler.service exists and points to $(readlink -f ${_systemd_service_file_dir})"
+    rm "${_systemd_service_file_dir}/ldmsd.sampler.service"
   elif [[ -f ${_systemd_service_file_dir}/ldmsd.sampler.service ]] ; then
     inform "${_systemd_service_file_dir}/ldmsd.sampler.service is a file"
+    rm "${_systemd_service_file_dir}/ldmsd.sampler.service"
   fi
   inform "Removing ${_systemd_service_file_dir}/ldmsd.sampler.service and placing a symlink to ${_top}/etc/systemd/system/ldmsd.sampler.service"
   pushd ${_systemd_service_file_dir} &>/dev/null
-  ln -s ${_top}/etc/systemd/system/ldmsd.sampler.service
+  ln -s ${_top}/etc/systemd/system/ldmsd.sampler.service &>/dev/null
   popd &>/dev/null
   /usr/bin/systemctl daemon-reload
 }
@@ -334,7 +340,7 @@ while getopts "a:A:d:hl:m:p:P:S:vx:-" opt ; do
     p) LDMSD_PORT="${OPTARG}"			;;
     P) TOP="${OPTARG}"				;;
     S) SYSTEMD_SERVICE_FILE_DIR="${OPTARG}"	;;
-    v) set -x					;;
+    v) set -x; set VERBOSE="true"		;;
     x) LDMSD_XPRT="${OPTARG}"			;;
   esac
 done
