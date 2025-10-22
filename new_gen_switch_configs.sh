@@ -56,7 +56,7 @@ get_func_opts () {
       p) _ldmsd_port="${OPTARG}"			;;
       P) _top="${OPTARG}"				;;
       s) _start_file="${OPTARG}"			;;
-      S) _ldmsd_systemctl_service_file="${OPTARG}"      ;;
+      S) _ldmsd_systemd_service_file="${OPTARG}"        ;;
       x) _ldmsd_xprt="${OPTARG}"			;;
       v) _ldmsd_verbose="${OPTARG}"			;;
       V) _ldmsd_systemd_service_file_dir="${OPTARG}"	;;
@@ -135,7 +135,7 @@ SAMPCONF
 
 find_lib_dir () {
   _top=$1
-  local _libdir=$(find ${_top} -name "ldmsd.so" -exec dirname {} \;)
+  local _libdir=$(find ${_top} -name "libldms.so" -exec dirname {} \;)
   [ -d "${_libdir}" ] || die "find_lib_dir failed"
   echo "${_libdir}"
 }
@@ -182,6 +182,10 @@ LDMSD_MEM=${_ldmsd_mem}
 # Define LDMS Daemon verbosity
 LDMSD_VERBOSITY=${_ldmsd_verbose}
 LDMSENV
+  tput setaf 2
+  printf "LDMSD Env File Generated at $(readlink -f ${_ldmsd_sampler_env_file})\n"
+  printf "$(cat ${_ldmsd_sampler_env_file})\n"
+  tput sgr0
 }
 
 gen_ldmsd_systemd_env_file () {
@@ -223,6 +227,10 @@ export LDMSD_AUTH_OPTION="-a ${_ldmsd_auth_plugin}"
 # LDMS plugin configuration file, see ${_top}/etc/ldms/sampler.conf for an example
 export LDMSD_PLUGIN_CONFIG_FILE=${_ldmsd_sampler_config_file}
 ENV
+  tput setaf 2
+  printf "Generated systemd environment file."
+  printf "$(cat ${_ldmsd_sampler_systemd_env_file})\n"
+  tput sgr0
 }
 
 
@@ -235,6 +243,10 @@ echo "RUNNING: ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_p
 ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_plugin_conf_file} -a ${_ldmsd_auth_plugin} ${_ldmsd_auth_plugin_conf} -v ${_ldmsd_verbose} -m ${_ldmsd_mem} ${_ldmsd_log_option}
 STARTFILE
 chmod +x ${_start_file}
+  tput setaf 2
+  printf "Generated ${_start_file}."
+  printf "$(cat ${_start_file})\n"
+  tput sgr0
 }
 
 gen_systemd_service_file () {
@@ -247,32 +259,30 @@ Documentation = https://ovis-hpc.readthedocs.io/en/latest/
 
 [Service]
 Type = forking
-echo "EnvironmentFile = ${_ldmsd_sampler_systemd_env_file}
+EnvironmentFile = ${_ldmsd_sampler_systemd_env_file}
 Environment = HOSTNAME=%H
-echo "ExecStartPre = /bin/mkdir -p ${_top}/var/run/ldmsd
-echo "ExecStart = ${_top}/sbin/ldmsd \
-                -x ${_ldmsd_xprt}:${_ldmsd_port} \
-                -c ${_ldmsd_sampler_config_file} \
-                -a ${_ldmsd_auth_plugin} \
-                -v ${_ldmsd_verbose} \
-                -m ${_ldmsd_mem} \
-                -r ${_top}/var/run/ldmsd/sampler.pid ${_ldmsd_log_option} ${_ldmsd_auth_plugin_conf}
+ExecStartPre = /bin/mkdir -p ${_top}/var/run/ldmsd
+ExecStart = ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_sampler_config_file} -a ${_ldmsd_auth_plugin} -v ${_ldmsd_verbose} -m ${_ldmsd_mem} -r ${_top}/var/run/ldmsd/sampler.pid ${_ldmsd_log_option} ${_ldmsd_auth_plugin_conf}
 [Install]
 WantedBy = default.target
 SYSTEMD
 
   # Create symbolic link to new service file if link doesn't exist
-  if [[ -h ${_systemd_service_file_dir}/ldmsd.sampler.service ]] ; then
-    inform "${_systemd_service_file_dir}/ldmsd.sampler.service exists and points to $(readlink -f ${_systemd_service_file_dir})"
-    rm "${_systemd_service_file_dir}/ldmsd.sampler.service"
-  elif [[ -f ${_systemd_service_file_dir}/ldmsd.sampler.service ]] ; then
-    inform "${_systemd_service_file_dir}/ldmsd.sampler.service is a file"
-    rm "${_systemd_service_file_dir}/ldmsd.sampler.service"
+  if [[ -h ${_ldmsd_systemd_service_file_dir}/ldmsd.sampler.service ]] ; then
+    inform "${_ldmsd_systemd_service_file_dir}/ldmsd.sampler.service exists and points to $(readlink -f ${_ldmsd_systemd_service_file_dir})"
+    unlink "${_ldmsd_systemd_service_file_dir}/ldmsd.sampler.service" || die "cannot remove link at ${_ldmsd_systemd_service_file_dir}/ldmsd.sampler.service"
+  elif [[ -f ${_ldmsd_systemd_service_file_dir}/ldmsd.sampler.service ]] ; then
+    inform "${_ldmsd_systemd_service_file_dir}/ldmsd.sampler.service is a file"
+    rm "${_ldmsd_systemd_service_file_dir}/ldmsd.sampler.service" || die "cannot remove file at ${_ldmsd_systemd_service_file_dir}/ldmsd.sampler.service"
   fi
-  inform "Removing ${_systemd_service_file_dir}/ldmsd.sampler.service and placing a symlink to ${_top}/etc/systemd/system/ldmsd.sampler.service"
-  pushd ${_systemd_service_file_dir} &>/dev/null
-  ln -s ${_top}/etc/systemd/system/ldmsd.sampler.service &>/dev/null
+  inform "Removing ${_ldmsd_systemd_service_file_dir}/ldmsd.sampler.service and placing a symlink to ${_top}/etc/systemd/system/ldmsd.sampler.service"
+  pushd ${_ldmsd_systemd_service_file_dir} &>/dev/null
+  ln -s ${_top}/etc/systemd/system/ldmsd.sampler.service || die "cannot link to ${_top}/etc/systemd/system/ldmsd.sampler.service"
   popd &>/dev/null
+  tput setaf 2
+  printf "Generated ${_ldmsd_systemd_service_file}."
+  echo "$(cat ${_ldmsd_systemd_service_file})"
+  tput sgr0
   /usr/bin/systemctl daemon-reload
 }
 
@@ -359,6 +369,7 @@ START_FILE="${TOP}/etc/ldms/start_slingshot_ldms_sampler.sh"
 LDMSD_SYSTEMD_SERVICE_FILE="${TOP}/etc/systemd/system/ldmsd.sampler.service"
 SYSTEMD_SERVICE_FILE_DIR=${SYSTEMD_SERVICE_FILE_DIR:=/etc/systemd/system}
 LDMSD_PORT=${LDMSD_PORT:=411}
+LDMSD_XPRT=${LDMSD_XPRT:=sock}
 LDMSD_AUTH=${LDMSD_AUTH:=none}
 LDMSD_MEM=${LDMSD_MEM:=5M}
 LDMSD_LOG_OPTION=${LDMSD_LOG_OPTION:=""}
