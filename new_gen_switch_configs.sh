@@ -237,13 +237,13 @@ ENV
 
 gen_start_file () {
   get_func_opts "$@"
+  if [[ "${_ldmsd_log_option}"x != x ]] ; then _ldmsd_log_option=( "-l " ${_ldmsd_log_option} ) ; fi
+  if [[ "${_ldmsd_auth_plugin_conf}"x != x ]] ; then _ldmsd_auth_plugin_conf=( "-A" "conf=${_ldmsd_auth_plugin_conf}" ) ; fi
   cat <<-STARTFILE >${_start_file}
 #!/bin/bash
 source ${top}/etc/ldms/ldmsd.sampler.env
-if [[ "${_ldmsd_log_option}"x != x ]] ; then _ldmsd_log_option=( "-l " ${_ldmsd_log_option} ) ; fi
-if [[ "${_ldmsd_auth_plugin_conf}"x != x ]] ; then _ldmsd_auth_plugin_conf=( "-A" "conf=${_ldmsd_auth_plugin_conf}" ) ; fi
-echo "RUNNING: ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_sampler_config_file} -a ${_ldmsd_auth_plugin} \${_ldmsd_auth_plugin_conf[@]} -v ${_ldmsd_verbose} -m ${_ldmsd_mem} \${_ldmsd_log_option[@]}"
-${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_sampler_config_file} -a ${_ldmsd_auth_plugin} \${_ldmsd_auth_plugin_conf[@]}" -v ${_ldmsd_verbose} -m ${_ldmsd_mem} \${_ldmsd_log_option[@]}"
+echo "RUNNING: ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_sampler_config_file} -a ${_ldmsd_auth_plugin} ${_ldmsd_auth_plugin_conf[@]} -v ${_ldmsd_verbose} -m ${_ldmsd_mem} ${_ldmsd_log_option[@]}"
+${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_sampler_config_file} -a ${_ldmsd_auth_plugin} ${_ldmsd_auth_plugin_conf[@]}" -v ${_ldmsd_verbose} -m ${_ldmsd_mem} ${_ldmsd_log_option[@]}"
 STARTFILE
 chmod +x ${_start_file}
   tput setaf 2
