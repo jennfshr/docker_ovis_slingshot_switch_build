@@ -285,7 +285,7 @@ SYSTEMD
   ln -s ${_ldmsd_systemd_service_file} || die "cannot link to ${_ldmsd_systemd_service_file}"
   popd &>/dev/null
   tput setaf 2
-  printf "Generated ${_ldmsd_systemd_service_file}."
+  printf "Generated ${_ldmsd_systemd_service_file}:\n"
   echo "$(cat ${_ldmsd_systemd_service_file})"
   tput sgr0
   /usr/bin/systemctl daemon-reload
