@@ -99,26 +99,22 @@ find_script_dir_bottom () {
 
 gen_port_metrics_conf () {
   get_func_opts "$@"
-  local _port=""
+  command -v dgrportinfo &>/dev/null ||\
+    die "dgrportinfo not in \$PATH"
+  # Query for unconfigured ports and links using dgrportinfo
+  local _conf_ports=$(dgrportinfo | awk -F':' '/port=running, link=up, serdes=running, headshell=1/ { gsub(/p/,""); print $1}'| awk 'BEGIN {RS=""} {gsub(/\n/,",",$0); print $0}'|sed 's/ //g')
+  local _unconf_ports=$(dgrportinfo | awk -F':' '/port=unconfigured/ { gsub(/p/,""); print $1}'| awk 'BEGIN {RS=""} {gsub(/\n/,",",$0); print $0}'|sed 's/ //g')
   [ -d $(dirname ${_port_metrics_conf_file}) ] || \
 	  mkdir -p $(dirname ${_port_metrics_conf_file}) || \
 	  die "cannot mkdir at $(dirname ${_port_metrics_conf_file})"
   echo "# Configuration for switch: ${_switch}" > ${_port_metrics_conf_file}
-  for i in {0..63}; do
-    _port="${i}: "
-    _port+=$(portctl -p ${i} -o status 2>&1 | grep "R_TF_CFTX.CFG_LINK_STATE.NEW_TX_LK:")
-    echo ${_port} |\
-      grep RUNNING_0 |\
-      awk '{print $1}' |\
-      sed 's/://g' |\
-      tr '\n' ','
-  done | sed 's/^/p=/' | sed 's/.$/\n/' >> ${_port_metrics_conf_file}
+  echo "p=${_conf_ports}" > ${_port_metrics_conf_file}
   echo "#" >> ${_port_metrics_conf_file}
   echo "rfc_3635" >> ${_port_metrics_conf_file}
-  tput setaf 2
-  printf "Port Configuration File Generated at $(readlink -f ${_port_metrics_conf_file})\n"
-  printf "$(cat ${_port_metrics_conf_file})\n"
-  tput sgr0
+  inform "Unconfigured Ports are p:${_unconf_ports}"
+  inform "Configured Ports are p:${_conf_ports}"
+  inform "Port Configuration File Generated at $(readlink -f ${_port_metrics_conf_file})"
+  pretty_print "$(cat ${_port_metrics_conf_file})"
 }
 
 gen_ldmsd_sampler_conf () {
@@ -129,10 +125,9 @@ load name=slingshot_switch
 config name=slingshot_switch producer=${_switch} component_id=${_comp_id} instance=${_switch}/port_metrics conffile=${_port_metrics_conf_file}
 start name=slingshot_switch interval=1000000
 SAMPCONF
-  tput setaf 2
-  printf "INFO: Sampler Configuration File Generated at $(readlink -f ${_ldmsd_sampler_config_file})\n"
-  printf "$(cat ${_ldmsd_sampler_config_file})\n"
-  tput sgr0
+  inform "INFO: Sampler Configuration File Generated at $(readlink -f ${_ldmsd_sampler_config_file})"
+  pretty_print "
+  $(cat ${_ldmsd_sampler_config_file})"
 }
 
 find_lib_dir () {
@@ -184,10 +179,9 @@ LDMSD_MEM=${_ldmsd_mem}
 # Define LDMS Daemon verbosity
 LDMSD_VERBOSITY=${_ldmsd_verbose}
 LDMSENV
-  tput setaf 2
-  printf "LDMSD Env File Generated at $(readlink -f ${_ldmsd_systemd_env_file})\n"
-  printf "$(cat ${_ldmsd_systemd_env_file})\n"
-  tput sgr0
+  inform "LDMSD Env File Generated at $(readlink -f ${_ldmsd_systemd_env_file})"
+  pretty_print "
+  $(cat ${_ldmsd_systemd_env_file})"
 }
 
 gen_ldmsd_env_file () {
@@ -229,10 +223,9 @@ export LDMSD_AUTH_OPTION="${_ldmsd_auth_plugin}"
 # LDMS plugin configuration file, see ${_top}/etc/ldms/sampler.conf for an example
 export LDMSD_PLUGIN_CONFIG_FILE=${_ldmsd_sampler_config_file}
 ENV
-  tput setaf 2
-  printf "Generated systemd environment file."
-  printf "$(cat ${_ldmsd_sampler_env_file})\n"
-  tput sgr0
+  inform "Generated systemd environment file."
+  pretty_print "
+  $(cat ${_ldmsd_sampler_env_file})"
 }
 
 gen_start_file () {
@@ -245,11 +238,10 @@ source ${top}/etc/ldms/ldmsd.sampler.env
 echo "RUNNING: ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_sampler_config_file} -a ${_ldmsd_auth_plugin} ${_ldmsd_auth_plugin_conf[@]} -v ${_ldmsd_verbose} -m ${_ldmsd_mem} ${_ldmsd_log_option[@]}"
 ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_sampler_config_file} -a ${_ldmsd_auth_plugin} ${_ldmsd_auth_plugin_conf[@]}" -v ${_ldmsd_verbose} -m ${_ldmsd_mem} ${_ldmsd_log_option[@]}"
 STARTFILE
-chmod +x ${_start_file}
-  tput setaf 2
-  printf "Generated start script: ${_start_file}\n"
-  printf "$(cat ${_start_file})\n"
-  tput sgr0
+  chmod +x ${_start_file}
+  inform "Generated start script: ${_start_file}"
+  pretty_print "
+  $(cat ${_start_file})"
 }
 
 gen_systemd_service_file () {
@@ -284,11 +276,11 @@ SYSTEMD
   pushd ${_ldmsd_systemd_service_file_dir} &>/dev/null
   ln -s ${_ldmsd_systemd_service_file} || die "cannot link to ${_ldmsd_systemd_service_file}"
   popd &>/dev/null
-  tput setaf 2
-  printf "Generated ${_ldmsd_systemd_service_file}:\n"
-  echo "$(cat ${_ldmsd_systemd_service_file})"
-  tput sgr0
-  /usr/bin/systemctl daemon-reload
+  inform "Generated ${_ldmsd_systemd_service_file}:"
+  pretty_print "
+  $(cat ${_ldmsd_systemd_service_file})"
+  inform "Running \`/usr/bin/systemctl daemon-reload\`"
+  /usr/bin/systemctl daemon-reload || die "error running daemon-reload"
 }
 
 usage() {
@@ -301,7 +293,7 @@ usage() {
     [-v|--verbose]		-- enable xtrace output for ${0//*\/}in shell
     [-h|--help]			-- dumps usage and exits
     [-x|--xprt]			-- LDMSD transport (default: sock)
-    [-p|--port]			-- LDMSD port
+    [-p|--port]			-- LDMSD port (default: 411)
     [-m|--mem]			-- LDMSD mem setting (default: 5M)
     [-l|--log]			-- LDMSD log location (default: none)
     [-S|--systemd-dir]		-- Where to install systemd service files (default: /etc/systemd/system)
@@ -412,45 +404,56 @@ func_opts=(
 "-v" "${LDMSD_VERBOSE}"
 "-x" "${LDMSD_XPRT}"
 )
-tput setaf 2
-echo "Function Options: ${func_opts[@]}"
-tput sgr0
 
+# Run gen_port_metrics_conf
 pretty_print "
 gen_port_metrics_conf "${func_opts[@]}"
 "
 gen_port_metrics_conf "${func_opts[@]}"
+
+# Generate LDMSD Sampler Configuration File
 inform "Generating ldmsd_sampler_config at ${LDMSD_SAMPLER_CONFIG_FILE}"
 pretty_print "
 gen_ldmsd_sampler_conf "${func_opts[@]}"
 "
 gen_ldmsd_sampler_conf "${func_opts[@]}"
 
+# Generate the environment file sourced by the systemd service file
 inform "Generating ldmsd systemd environment file at ${LDMSD_SYSTEMD_ENV_FILE}"
 pretty_print "
 gen_ldmsd_systemd_env_file "${func_opts[@]}"
 "
 gen_ldmsd_systemd_env_file "${func_opts[@]}"
 
+# Generate the LDMS Sampler Environment file
+# used to start ldmsd sampler manually
 inform "Generating LDMSD Sampler environment file at ${LDMSD_SAMPLER_ENV_FILE}"
 pretty_print "
 gen_ldmsd_env_file "${func_opts[@]}"
 "
 gen_ldmsd_env_file "${func_opts[@]}"
 
+# Generate the LDMS Sampler startup script
+# that can be used to manually start the daemon
 inform "Generating start script at ${START_FILE}"
 pretty_print "
 gen_start_file "${func_opts[@]}"
 "
 gen_start_file "${func_opts[@]}"
 
+# Generate a systemd service file to run
+# LDMSD as a service daemon
 inform "Generating a systemd service file at ${LDMSD_SYSTEMD_SERVICE_FILE}."
 pretty_print "
 gen_systemd_service_file "${func_opts[@]}"
 "
 gen_systemd_service_file "${func_opts[@]}"
 
+# Print out a final statement on how to start via systemd
+# and how to interact with it via ldms_ls command
 inform "LDMS is now configured to run on ${SWITCH}."
-inform "To start/restart the ldmsd slingshot sampler run: \"systemctl restart ldmsd.sampler\""
-inform "Set up your environment by running: \"source ${LDMSD_SAMPLER_ENV_FILE}\""
-inform "To check the status of the running service daemon, run \"ldms_ls -h localhost -x ${LDMSD_XPRT} -p ${LDMSD_PORT} -l\""
+inform "LDMS is installed at ${TOP}."
+inform "Start/Stop/Status service: \"systemctl {start,stop,status} ldmsd.sampler\""
+inform "To verify that the sampler is collecting:"
+inform "\`source ${LDMSD_SAMPLER_ENV_FILE}\`"
+inform "\`ldms_ls -h localhost -x ${LDMSD_XPRT} -p ${LDMSD_PORT} -l\`"
