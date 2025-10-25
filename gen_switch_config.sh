@@ -43,24 +43,24 @@ get_func_opts () {
   OPTIND=1
   while getopts "a:A:c:C:D:e:E:h:l:m:p:P:s:S:x:v:V:" opt ; do
     case "${opt}" in
-      a) _ldmsd_auth_plugin="${OPTARG}"			;;
-      A) _ldmsd_auth_plugin_conf="${OPTARG}"    	;;
-      c) _ldmsd_sampler_config_file="${OPTARG}"		;;
-      C) _comp_id="${OPTARG}"				;;
-      D) _port_metrics_conf_file="${OPTARG}"		;;
-      e) _ldmsd_sampler_env_file="${OPTARG}"		;;
-      E) _ldmsd_systemd_env_file="${OPTARG}"    	;;
-      h) _switch="${OPTARG}"				;;
-      l) _ldmsd_log_option="${OPTARG}"  		;;
-      m) _ldmsd_mem="${OPTARG}"				;;
-      p) _ldmsd_port="${OPTARG}"			;;
-      P) _top="${OPTARG}"				;;
-      s) _start_file="${OPTARG}"			;;
-      S) _ldmsd_systemd_service_file="${OPTARG}"        ;;
-      x) _ldmsd_xprt="${OPTARG}"			;;
-      v) _ldmsd_verbose="${OPTARG}"			;;
+      a) _ldmsd_auth_plugin="${OPTARG}"					;;
+      A) _ldmsd_auth_plugin_conf="${OPTARG}"			;;
+      c) _ldmsd_sampler_config_file="${OPTARG}"			;;
+      C) _comp_id="${OPTARG}"							;;
+      D) _port_metrics_conf_file="${OPTARG}"			;;
+      e) _ldmsd_sampler_env_file="${OPTARG}"			;;
+      E) _ldmsd_systemd_env_file="${OPTARG}"			;;
+      h) _switch="${OPTARG}"							;;
+      l) _ldmsd_log_option="${OPTARG}"					;;
+      m) _ldmsd_mem="${OPTARG}"							;;
+      p) _ldmsd_port="${OPTARG}"						;;
+      P) _top="${OPTARG}"								;;
+      s) _start_file="${OPTARG}"						;;
+      S) _ldmsd_systemd_service_file="${OPTARG}"		;;
+      x) _ldmsd_xprt="${OPTARG}"						;;
+      v) _ldmsd_verbose="${OPTARG}"						;;
       V) _ldmsd_systemd_service_file_dir="${OPTARG}"	;;
-      *)						;;
+      *)												;;
     esac
   done
   if [[ "${_ldmsd_auth_plugin_conf}" =~ none ]] ; then
@@ -81,20 +81,6 @@ get_comp_id () {
   local _comp_id=""
   _comp_id=$(hostname -s | sed 's/[a-zA-Z]//g')
   echo "$_comp_id"
-}
-
-find_script_dir_top () {
-  local _this_script=$1
-  local _script_path=$(dirname $(readlink -f ${_this_script}))
-  local _top_dir=$(echo ${_script_path} | awk -F'/' '{print $2}')
-  echo "${_top_dir}"
-}
-
-find_script_dir_bottom () {
-  local _this_script=$1
-  local _script_path=$(dirname $(readlink -f ${_this_script}))
-  local _bottom_dir=$(echo ${_script_path} | awk -F'/' '{print $NF}')
-  echo "${_bottom_dir}"
 }
 
 gen_port_metrics_conf () {
@@ -118,7 +104,7 @@ gen_port_metrics_conf () {
   inform "Unconfigured Ports are p:${_unconf_ports}"
   inform "Configured Ports are p:${_conf_ports}"
   inform "Port Configuration File Generated at $(readlink -f ${_port_metrics_conf_file})"
-  pretty_print "$(cat ${_port_metrics_conf_file})"
+  pretty_print "\n$(cat ${_port_metrics_conf_file})"
 }
 
 gen_ldmsd_sampler_conf () {
@@ -130,8 +116,7 @@ config name=slingshot_switch producer=${_switch} component_id=${_comp_id} instan
 start name=slingshot_switch interval=1000000
 SAMPCONF
   inform "INFO: Sampler Configuration File Generated at $(readlink -f ${_ldmsd_sampler_config_file})"
-  pretty_print "
-  $(cat ${_ldmsd_sampler_config_file})"
+  pretty_print "\n$(cat ${_ldmsd_sampler_config_file})"
 }
 
 find_lib_dir () {
@@ -184,8 +169,7 @@ LDMSD_MEM=${_ldmsd_mem}
 LDMSD_VERBOSITY=${_ldmsd_verbose}
 LDMSENV
   inform "LDMSD Env File Generated at $(readlink -f ${_ldmsd_systemd_env_file})"
-  pretty_print "
-  $(cat ${_ldmsd_systemd_env_file})"
+  pretty_print "\n$(cat ${_ldmsd_systemd_env_file})"
 }
 
 gen_ldmsd_env_file () {
@@ -228,8 +212,7 @@ export LDMSD_AUTH_OPTION="${_ldmsd_auth_plugin}"
 export LDMSD_PLUGIN_CONFIG_FILE=${_ldmsd_sampler_config_file}
 ENV
   inform "Generated systemd environment file."
-  pretty_print "
-  $(cat ${_ldmsd_sampler_env_file})"
+  pretty_print "\n$(cat ${_ldmsd_sampler_env_file})"
 }
 
 gen_start_file () {
@@ -244,8 +227,7 @@ ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_sampler_config_f
 STARTFILE
   chmod +x ${_start_file}
   inform "Generated start script: ${_start_file}"
-  pretty_print "
-  $(cat ${_start_file})"
+  pretty_print "\n$(cat ${_start_file})"
 }
 
 gen_systemd_service_file () {
@@ -267,22 +249,21 @@ ExecStart = ${_top}/sbin/ldmsd -x ${_ldmsd_xprt}:${_ldmsd_port} -c ${_ldmsd_samp
 [Install]
 WantedBy = default.target
 SYSTEMD
-
+  local _service_file=${_ldmsd_systemd_service_file_dir}/${_ldmsd_systemd_service_file//*\/}
   # Create symbolic link to new service file if link doesn't exist
-  if [[ -h ${_ldmsd_systemd_service_file_dir}/${_ldmsd_systemd_service_file//*\/} ]] ; then
-    inform "${_ldmsd_systemd_service_file_dir}/${_ldmsd_systemd_service_file//*\/} exists and points to $(readlink -f ${_ldmsd_systemd_service_file_dir})"
-    unlink "${_ldmsd_systemd_service_file_dir}/${_ldmsd_systemd_service_file//*\/}" || die "cannot remove link at ${_ldmsd_systemd_service_file_dir}/${_ldmsd_systemd_service_File//*\/}"
-  elif [[ -f ${_ldmsd_systemd_service_file_dir}/${_ldmsd_systemd_service_file//*\/} ]] ; then
-    inform "${_ldmsd_systemd_service_file_dir}/${_ldmsd_systemd_service_file//*\/} is a file"
-    rm "${_ldmsd_systemd_service_file_dir}/${_ldmsd_systemd_service_file//*\/}" || die "cannot remove file at ${_ldmsd_systemd_service_file_dir}/${_ldmsd_systemd_service_file//*\/}"
+  if [[ -h ${_service_file} ]] ; then
+    inform "${_service_file} exists and points to $(readlink -f ${_ldmsd_systemd_service_file_dir})"
+    unlink "${_service_file" || die "cannot remove link at ${_service_file//*\/}"
+  elif [[ -f ${_service_file//*\/} ]] ; then
+    inform "${_service_file//*\/} is a file"
+    rm "${_service_file//*\/}" || die "cannot remove file at ${_service_file//*\/}"
   fi
-  inform "Removing ${_ldmsd_systemd_service_file_dir}/${_ldmsd_systemd_service_file//*\/} and placing a symlink to ${_ldmsd_systemd_service_file}"
+  inform "Removing ${_service_file//*\/} and placing a symlink to ${_ldmsd_systemd_service_file}"
   pushd ${_ldmsd_systemd_service_file_dir} &>/dev/null
   ln -s ${_ldmsd_systemd_service_file} || die "cannot link to ${_ldmsd_systemd_service_file}"
   popd &>/dev/null
   inform "Generated ${_ldmsd_systemd_service_file}:"
-  pretty_print "
-  $(cat ${_ldmsd_systemd_service_file})"
+  pretty_print "\n$(cat ${_ldmsd_systemd_service_file})"
   inform "Running \`/usr/bin/systemctl daemon-reload\`"
   /usr/bin/systemctl daemon-reload || die "error running daemon-reload"
 }
@@ -293,13 +274,13 @@ usage() {
     [-a|--auth-plugin]		-- ldmsd authentication plugin; default \"none\".  Chose from: \"none\", \"munge\", \"ovis\". (default: \"none\")
     [-A|--auth-conf]		-- ldmsd authentication file for shared secret when using \"-a ovis\" auth mode;  (default: \"\"; ldmsd defaults to /etc/ldmsauth.conf)
     [-d|--ldmsd-verbose]	-- Set Verbosity of LDMSD Logs chose from: \"DEBUG\", \"INFO\", \"ERROR\", \"CRITICAL\", and \"QUIET\" (default: \"ERROR\")
-    [-P|--prefix]		-- Prefix path for OVIS installation (defaults /rwfs/usr)
-    [-v|--verbose]		-- enable xtrace output for ${0//*\/}in shell
-    [-h|--help]			-- dumps usage and exits
-    [-x|--xprt]			-- LDMSD transport (default: sock)
-    [-p|--port]			-- LDMSD port (default: 411)
-    [-m|--mem]			-- LDMSD mem setting (default: 5M)
-    [-l|--log]			-- LDMSD log location (default: none)
+    [-P|--prefix]			-- Prefix path for OVIS installation (defaults /rwfs/usr)
+    [-v|--verbose]			-- enable xtrace output for ${0//*\/}in shell
+    [-h|--help]				-- dumps usage and exits
+    [-x|--xprt]				-- LDMSD transport (default: sock)
+    [-p|--port]				-- LDMSD port (default: 411)
+    [-m|--mem]				-- LDMSD mem setting (default: 5M)
+    [-l|--log]				-- LDMSD log location (default: none)
     [-S|--systemd-dir]		-- Where to install systemd service files (default: /etc/systemd/system)
 
   For support email <ldms@sandia.gov>
@@ -310,43 +291,43 @@ usage() {
 for arg in "$@" ; do
   shift
   case "$arg" in
-    *-auth-plug**)	set -- "$@" "-a" ;;
+    *-auth-plug*)	set -- "$@" "-a" ;;
     *-auth*conf*)	set -- "$@" "-A" ;;
     *-ldms*ver*)	set -- "$@" "-d" ;;
     *-help*)		set -- "$@" "-h" ;;
     *-ldms*log*)	set -- "$@" "-l" ;;
     *-ldms*mem*)	set -- "$@" "-m" ;;
     *-*port*)		set -- "$@" "-p" ;;
-    *-pre*)		set -- "$@" "-P" ;;
+    *-pre*)			set -- "$@" "-P" ;;
     *-systemd*)		set -- "$@" "-S" ;;
     *-verb*)		set -- "$@" "-v" ;;
     *-*xprt*)		set -- "$@" "-x" ;;
-    *)			set -- "$@" "$arg" ;;
+    *)				set -- "$@" "$arg" ;;
   esac
 done
 OPTIND=1
 while getopts "a:A:d:hl:m:p:P:S:vx:-" opt ; do
   case "${opt}" in
-    a) LDMSD_AUTH_PLUGIN=${OPTARG}		;;
-    A) LDMSD_AUTH_PLUGIN_CONF=${OPTARG}		;;
+    a) LDMSD_AUTH_PLUGIN=${OPTARG}						;;
+    A) LDMSD_AUTH_PLUGIN_CONF=${OPTARG}					;;
     d) case "${OPTARG}" in
-         *ERROR*|*error*) LDMSD_VERBOSE="ERROR" ;;
-         *DEBUG*|*debug*) LDMSD_VERBOSE="DEBUG" ;;
-         *INFO*|*info*) LDMSD_VERBOSE="INFO"    ;;
-         *CRITICAL*|*critical*) LDMSD_VERBOSE="CRITICAL" ;;
-         *QUIET*|*quiet*) LDMSD_VERBOSE="QUIET" ;;
+         *ERROR*|*error*) LDMSD_VERBOSE="ERROR"			;;
+         *DEBUG*|*debug*) LDMSD_VERBOSE="DEBUG"			;;
+         *INFO*|*info*) LDMSD_VERBOSE="INFO"			;;
+         *CRITICAL*|*critical*) LDMSD_VERBOSE="CRITICAL";;
+         *QUIET*|*quiet*) LDMSD_VERBOSE="QUIET"			;;
          *) usage && die "LDMSD_VERBOSE=$LDMSD_VERBOSE is not supported"
          ;;
        esac
        ;;
-    h) usage && exit 0				;;
-    l) LDMSD_LOG_OPTION="${OPTARG}"		;;
-    m) LDMSD_MEM="${OPTARG}"			;;
-    p) LDMSD_PORT="${OPTARG}"			;;
-    P) TOP="${OPTARG}"				;;
-    S) SYSTEMD_SERVICE_FILE_DIR="${OPTARG}"	;;
-    v) set -x; set VERBOSE="true"		;;
-    x) LDMSD_XPRT="${OPTARG}"			;;
+    h) usage && exit 0									;;
+    l) LDMSD_LOG_OPTION="${OPTARG}"						;;
+    m) LDMSD_MEM="${OPTARG}"							;;
+    p) LDMSD_PORT="${OPTARG}"							;;
+    P) TOP="${OPTARG}"									;;
+    S) SYSTEMD_SERVICE_FILE_DIR="${OPTARG}"				;;
+    v) set -x; set VERBOSE="true"						;;
+    x) LDMSD_XPRT="${OPTARG}"							;;
   esac
 done
 
