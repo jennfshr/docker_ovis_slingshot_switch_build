@@ -102,8 +102,12 @@ gen_port_metrics_conf () {
   command -v dgrportinfo &>/dev/null ||\
     die "dgrportinfo not in \$PATH"
   # Query for unconfigured ports and links using dgrportinfo
-  local _conf_ports=$(dgrportinfo | awk -F':' '/port=running, link=up, serdes=running, headshell=1/ { gsub(/p/,""); print $1}'| awk 'BEGIN {RS=""} {gsub(/\n/,",",$0); print $0}'|sed 's/ //g')
-  local _unconf_ports=$(dgrportinfo | awk -F':' '/port=unconfigured/ { gsub(/p/,""); print $1}'| awk 'BEGIN {RS=""} {gsub(/\n/,",",$0); print $0}'|sed 's/ //g')
+  local _conf_ports=$(dgrportinfo | \
+                      awk -F':' '/port=running/ { gsub(/p/,""); print $1}' | \
+					  awk 'BEGIN {RS=""} {gsub(/\n/,",",$0); print $0}'|sed 's/ //g')
+  local _unconf_ports=$(dgrportinfo | \
+                        awk -F':' '/port=unconfigured/ { gsub(/p/,""); print $1}' | \
+						awk 'BEGIN {RS=""} {gsub(/\n/,",",$0); print $0}'|sed 's/ //g')
   [ -d $(dirname ${_port_metrics_conf_file}) ] || \
 	  mkdir -p $(dirname ${_port_metrics_conf_file}) || \
 	  die "cannot mkdir at $(dirname ${_port_metrics_conf_file})"
