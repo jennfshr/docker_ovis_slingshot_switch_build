@@ -42,7 +42,7 @@ env:
   GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
   CODENAME: ovis-ldms
   COMPONENT: main
-  OVIS_RELEASE: v4.4.5
+  OVIS_RELEASE: v4.5.2
   REPO_NAME: ${{ github.event.repository.name }}
   ARCHITECTURE: arm64
   
@@ -110,7 +110,7 @@ jobs:
         id: extract
         with:
           image: ${DOCKER_IMAGE}         # Name:tag or registry URL
-          path: /ovis-ldms-debian-package/ovis-ldms_4.4.5-1_arm64.deb
+          path: /ovis-ldms-debian-package/ovis-ldms_4.5.2-1_arm64.deb
           destination: ldms-slingshot-sampler/.
      
       - name: Upload artifact
