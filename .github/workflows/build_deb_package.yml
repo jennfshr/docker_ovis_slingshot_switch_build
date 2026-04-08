@@ -122,14 +122,15 @@ jobs:
           --sbom false \
           --file ./Dockerfile \
           --output "type=image,push=true" .
-          echo ":white_check_mark: ovis-ldms_.2-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
+          find / -name "ovis-ldms*deb" -exec readlink -f {} \;
+          echo ":white_check_mark: ovis-ldms_4.5.2-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
 
       - name: Extract .deb package from Docker image
         uses: shrink/actions-docker-extract@v3
         id: extract
         with:
           image: ${DOCKER_IMAGE}
-          path: /ovis-ldms-debian-package/ovis-ldms_.2-1_arm64.deb
+          path: /ovis-ldms-debian-package/ovis-ldms_4.5.2-1_arm64.deb
           destination: ovis-ldms-v4.5.2-1-slingshot-switch-sampler.ubuntu24.04.arm64/.
      
       - name: Upload artifact
