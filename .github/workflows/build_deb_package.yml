@@ -48,9 +48,7 @@ env:
   
 jobs:
   build:
-    runs-on: self-hosted
-    container:
-      image: debian:bullseye
+    runs-on: debian:bullseye
     strategy:
       fail-fast: false
       matrix:
