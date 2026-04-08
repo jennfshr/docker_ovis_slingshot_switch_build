@@ -1,42 +1,66 @@
-# Slingshot Switch Sampler LDMS Installation in a Docker Debian Container
+# Slingshot Switch Sampler LDMS DPKG Package Build in a Docker Debian Container
 
-## Jennifer Green <jkgreen@sandia.gov> (inspired by Cory Lueninghoener's original documentation)
+## Docker container build of debian11 ovis-ldms v4.4.6 release with slingshot-switch-sampler-plugin support
 
-This is a rather simple implementation of a docker build and run invocation on a Macintosh Apple M2 Max.
-
-No positional parameters are supplied to the script, but it will prompt for a docker username and password to authenticate to the docker registry.
-In order for me to pull from the docker registry, I had to disconnect from the VPN.
-
-The successful execution of the script will output the following execution trace of the docker build steps and a print statement directing the user to the resulting tarball on their desktop.
-
-```sh
-jkgreen@s1105469 ldms_docker % ./run_ldms_docker.sh
-Enter Docker Hub Username:
-Enter Docker Hub Password:
-Login Succeeded
-[+] Building 55.9s (8/8) FINISHED                                                                                                               docker:desktop-linux
- => [internal] load build definition from Dockerfile                                                                                                            0.0s
- => => transferring dockerfile: 1.48kB                                                                                                                          0.0s
- => [internal] load metadata for docker.io/library/debian:buster                                                                                                0.7s
- => [auth] library/debian:pull token for registry-1.docker.io                                                                                                   0.0s
- => [internal] load .dockerignore                                                                                                                               0.0s
- => => transferring context: 2B                                                                                                                                 0.0s
- => [1/3] FROM docker.io/library/debian:buster@sha256:58ce6f1271ae1c8a2006ff7d3e54e9874d839f573d8009c20154ad0f2fb0a225                                          0.0s
- => => resolve docker.io/library/debian:buster@sha256:58ce6f1271ae1c8a2006ff7d3e54e9874d839f573d8009c20154ad0f2fb0a225                                          0.0s
- => => sha256:58ce6f1271ae1c8a2006ff7d3e54e9874d839f573d8009c20154ad0f2fb0a225 984B / 984B                                                                      0.0s
- => => sha256:fba020fe61e2b15959ef887ea67c7fc61f77943d074889debe8d92e29402191f 529B / 529B                                                                      0.0s
- => => sha256:ba58cfa2eb92889af22a6fcf8c281a61599b0790c3912cd724549124cdfa4125 1.48kB / 1.48kB                                                                  0.0s
- => [2/3] RUN apt update     && apt install -y        autoconf        bash        bison        build-essential        flex        less        libssl-dev       13.7s
- => [3/3] RUN sh <<EOF > /build-script.sh                                                                                                                      40.7s
- => exporting to image                                                                                                                                          0.7s
- => => exporting layers                                                                                                                                         0.7s
- => => writing image sha256:741303d01bf0ff6d261961b8c8f613e7c1c4fccc2879144b04a7713bd8f15f69                                                                    0.0s
- => => naming to docker.io/library/ldms-slingshot-build                                                                                                         0.0s
-
-View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/khnv4eyhx21sw5y7xaz8k2nef
-
-What's Next?
-  View a summary of image vulnerabilities and recommendations → docker scout quickview
-tar: Removing leading `/' from member names
-LDMS Ubuntu Installation for ARM64 Slingshot Switch Samplers is at /Users/jkgreen/ldms_docker/archives/ovis_v4.4.3.tar.xz
+## Command line docker build and copy instructions
+```bash
+docker build -f Dockerfile -t ovis-ldms-slingshot-debian11:latest .
 ```
+```bash
+docker run --entrypoint tar ovis-ldms-slingshot-debian11 cfJ - /ovis-ldms-debian-package > ovis-ldms-debian-package.tar.xz
+tar jfx ovis-ldms-debian-package.tar.xz -x ovis-ldms-debian-package/ovis-ldms_4.4.6-1_arm64.deb
+```
+
+## Get debian package to the Slingshot Switch
+```bash
+scp ovis-ldms-debian-package/ovis-ldms_4.4.6-1_arm64.deb $USER@ncn-m001:~
+ssh $USER@ncn-m001
+scp ovis-ldms_4.4.6-1_arm64.deb root@x3001c0r42b0:~
+ssh root@x3001c0r42b0
+dpkg --instdir /rwfs/ --admindir /rwfs -i ovis-ldms_4.4.6-1_arm64.deb
+```
+
+## Get Switch Generation Script to the Switch
+```bash
+scp  ~jkgreen/myovis-ldms-slingshot/new_gen_switch_configs.sh root@x3001c0r42b0:/rwfs/usr/bin/.
+root@x3001c0r42b0's password:
+new_gen_switch_configs.sh      100%   17KB   9.2MB/s   00:00
+ssh root@
+chmod +x new_gen_switch_config.sh
+./new_gen_switch_config.sh -h
+```
+## Usage output for customizations
+```bash
+root@x3001c0r42b0:/rwfs/usr/bin# ./new_gen_switch_configs.sh -h
+new_gen_switch_configs.sh Configures LDMS for Slingshot Switches
+  usage: new_gen_switch_configs.sh [options]
+    [-a|--auth-plugin]		-- ldmsd authentication plugin; default "none".  Chose from: "none", "munge", "ovis". (default: "none")
+    [-A|--auth-conf]		-- ldmsd authentication file for shared secret when using "-a ovis" auth mode;  (default: ""; ldmsd defaults to /etc/ldmsauth.conf)
+    [-d|--ldmsd-verbose]	-- Set Verbosity of LDMSD Logs chose from: "DEBUG", "INFO", "ERROR", "CRITICAL", and "QUIET" (default: "ERROR")
+    [-P|--prefix]		-- Prefix path for OVIS installation (defaults /rwfs/usr)
+    [-v|--verbose]		-- enable xtrace output for new_gen_switch_configs.shin shell
+    [-h|--help]			-- dumps usage and exits
+    [-x|--xprt]			-- LDMSD transport (default: sock)
+    [-p|--port]			-- LDMSD port
+    [-m|--mem]			-- LDMSD mem setting (default: 5M)
+    [-l|--log]			-- LDMSD log location (default: none)
+    [-S|--systemd-dir]		-- Where to install systemd service files (default: /etc/systemd/system)
+
+  For support email <ldms@sandia.gov>
+  Git Repo: https://github.com/jennfshr/docker_ovis_slingshot_switch_build
+```
+
+## Generate Switch Configurations
+- `new_gen_switch_configs.sh` should do what is required to setup LDMS configurations and systemd service unit files for ldms-services enablement
+```bash
+
+
+## Github Action Automations are enabled - but require a self-hosted linux github debian11 runner on ARM64
+- WIP
+  
+## Script `build_debian_package.sh` is outdated, but left here for reference.
+- It'll get updated in time.
+- The successful execution of the script will output the following execution trace of the docker build steps and a print statement directing the user to the resulting tarball on their desktop.
+
+![image](https://github.com/user-attachments/assets/a8f502a8-4292-496b-835a-b6746fbba110)
+
