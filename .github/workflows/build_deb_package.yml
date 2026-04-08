@@ -53,7 +53,7 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-         - 'linux/arm64/v3'
+         - 'linux/arm64'
       #  - 'linux/arm64/v3' # required for act
       #  - 'linux/amd64'
       #  - 'linux/arm/v6'
