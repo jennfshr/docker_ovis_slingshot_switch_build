@@ -42,6 +42,7 @@ RUN apt list --upgradable \
        python3.9-minimal \
        python3.9 \
        python3-dev \
+       python3-docutils \
        python3-minimal \
        python3-packaging \
        ca-certificates \
@@ -58,13 +59,10 @@ export DEB_BUILD_OPTIONS='parallel=16' && \
 export PYTHON=/usr/bin/python3.9 && \
 export PYTHON_VERSION=3.9 && \
 echo "Cloning ovis" && \
-git clone http://github.com/ovis-hpc/ovis.git -b v4.4.6 ovis-ldms-4.4.6 && \
-sed -i 's/distutils/packaging/g' ovis-ldms-4.4.6/m4/ax_python_module_version.m4 && \
-sed -i 's/StrictVersion/Version/g' ovis-ldms-4.4.6/m4/ax_python_module_version.m4 && \
-cat ovis-ldms-4.4.6/m4/ax_python_module_version.m4 && \
-tar cfJ ovis-ldms-4.4.6.tar.xz ovis-ldms-4.4.6 && \
-cd ovis-ldms-4.4.6 && \
-dh_make -i -y -f ../ovis-ldms-4.4.6.tar.xz -e jkgreen@sandia.gov -c bsd && \
+git clone http://github.com/ovis-hpc/ovis.git -b b4.5 ovis-ldms-4.5.2 && \
+tar cfJ ovis-ldms-4.5.2.tar.xz ovis-ldms-4.5.2 && \
+cd ovis-ldms-4.5.2 && \
+dh_make -i -y -f ../ovis-ldms-4.5.2.tar.xz -e jkgreen@sandia.gov -c bsd && \
 [ -f debian/control ] && \
 echo "Source: ovis-ldms
 Priority: optional
@@ -90,7 +88,9 @@ Build-Depends:
  make [arm64],
  git [arm64],
  pkg-config [arm64],
- python3 [arm64]
+ python3 [arm64],
+ python3-docutils [arm64],
+ python3-dev [arm64],
 Standards-Version: 4.1.3
 Homepage: https://github.com/ovis-hpc/ovis
 
