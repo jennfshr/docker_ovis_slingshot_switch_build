@@ -1,7 +1,15 @@
 # Build OVIS Debian Package
-FROM debian:bullseye-slim AS build-stage
+FROM debian:bullseye
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
+
+RUN bash <<EOF
+echo " 
+Acquire::http::Timeout \"190\";
+Acquire::ftp::Timeout \"190\";
+Acquire::Retries \"10\";
+">/etc/apt/apt.conf.d/99timeout
+EOF
 
 RUN apt update \
 && apt upgrade -y \
@@ -13,6 +21,7 @@ RUN apt list --upgradable \
        bash \
        bison \
        build-essential \
+       cython3 \
        devscripts \
        dh-make \
        flex \
@@ -24,13 +33,14 @@ RUN apt list --upgradable \
        libssl-dev \
        libjansson4 \
        libjansson-dev \
-       libpython3-dev \
+       libpython3.9 \
        libpython3-stdlib \
        libtool \
        make \
        git \
        pkg-config \
-       python3 \
+       python3.9-minimal \
+       python3.9 \
        python3-dev \
        python3-docutils \
        python3-minimal \
@@ -46,6 +56,8 @@ cd ovis-ldms-debian-package && \
 export DEBEMAIL="jkgreen@sandia.gov" && \
 export DEBFULLNAME="Jennifer K. Green" && \
 export DEB_BUILD_OPTIONS='parallel=16' && \
+export PYTHON=/usr/bin/python3.9 && \
+export PYTHON_VERSION=3.9 && \
 echo "Cloning ovis" && \
 git clone http://github.com/ovis-hpc/ovis.git -b b4.5 ovis-ldms-4.5.2 && \
 tar cfJ ovis-ldms-4.5.2.tar.xz ovis-ldms-4.5.2 && \
@@ -70,6 +82,7 @@ Build-Depends:
  libjansson4 [arm64],
  less [arm64],
  lintian [arm64],
+ libpython3.9 [arm64],
  libssl-dev [arm64],
  libtool [arm64],
  make [arm64],
@@ -83,10 +96,6 @@ Homepage: https://github.com/ovis-hpc/ovis
 
 Package: ovis-ldms
 Architecture: arm64
-Depends:
- libssl-dev [arm64],
- python3-dev [arm64],
- bash [arm64]
 Description: LDMS for SlingShot Switches
 " > \$PWD/debian/control && \
 cat \$PWD/debian/control && \
@@ -97,7 +106,7 @@ debuild -uc -us
 EOF
 
 ## Create Debian Repository and GPG Sign Debian Package
-#FROM debian:bullseye-slim AS sign-stage
+#FROM build-stage
 #COPY --from=build-stage /ovis-ldms-debian-package /ovis-ldms-debian-package
 #ARG DEBIAN_FRONTEND=noninteractive
 #SHELL ["/bin/bash", "-c"]
