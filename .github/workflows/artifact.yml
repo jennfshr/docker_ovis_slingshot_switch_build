@@ -48,7 +48,9 @@ env:
   
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    container:
+      image: debian:bullseye
     strategy:
       fail-fast: false
       matrix:
@@ -105,59 +107,30 @@ jobs:
         run: |
           echo ":white_check_mark: Docker Login Successful" >> $GITHUB_STEP_SUMMARY
 
-      - name: Build Debian Package
-        if: success()
-        id: build
-        env:
-          GPG_USERNAME: ${{ secrets.GPG_USERNAME }}
-          GPG_EMAIL: ${{ secrets.GPG_EMAIL }}
-          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-          GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-        run: |
-          docker buildx build \
-          --platform ${{ steps.prepare.outputs.docker_platform }} \
-          --tag ${{ steps.prepare.outputs.docker_image }} \
-          --provenance false \
-          --sbom false \
-          --file ./Dockerfile \
-          --output "type=image,push=true" .
-          find / -name "ovis-ldms*deb" -exec readlink -f {} \;
-          echo ":white_check_mark: ovis-ldms_4.5.2-1_arm.deb created!" >> $GITHUB_STEP_SUMMARY
-
       - name: Extract .deb package from Docker image
         uses: shrink/actions-docker-extract@v3
         id: extract
         with:
-          image: ${DOCKER_IMAGE}
+          image: ${DOCKER_IMAGE}         # Name:tag or registry URL
           path: /ovis-ldms-debian-package/ovis-ldms_4.5.2-1_arm64.deb
-          destination: ovis-ldms-v4.5.2-1-slingshot-switch-sampler.ubuntu24.04.arm64/.
+          destination: ldms-slingshot-sampler/.
      
       - name: Upload artifact
-        continue-on-error: false
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: ovis-ldms-v4.5.2-slingshot-switch-sampler.ubuntu24.04.arm64
-          path: ovis-ldms-v4.5.2-slingshot-switch-sampler.ubuntu24.04.arm64
+          name: ldms-slingshot-sampler
+          path: ldms-slingshot-sampler
           overwrite: true
-          
-      - name: create-repo
-        continue-on-error: false
-        uses: morph027/apt-repo-action@v2
-        id: create-apt-repo
-        with:
-          repo-name: ${{ env.REPO_NAME }}
-          signing-key: ${{ env.GPG_PUBLIC_KEY }}
-          codename: ${{ env.CODENAME }}
-          component: ${{ env.COMPONENT }}
-          architectures: ${{ env.ARCHITECTURE }}
-      
-      - name: upload pages artifact
-        continue-on-error: false
-        uses: actions/upload-pages-artifact@v3
-        with:
-          name: github-pages
-          path: ${{ steps.create-apt-repo.outputs.dir }}
+        # e.g. /output/. or /tmp/. (must end with /. to extract contents)
+
+    
+#      - name: upload pages artifact
+#        continue-on-error: true
+#        uses: actions/upload-pages-artifact@v3
+#        with:
+#          name: github-pages
+#          path: ${{ steps.create-apt-repo.outputs.dir }}
           
       - name: list directory contents of ldms-slingshot-sampler
         continue-on-error: true
@@ -171,23 +144,11 @@ jobs:
           name: ldms-slingshot-sampler
           path: ldms-slingshot-sampler
       
-#      - name: Upload package
-#        if: success()
-#        id: upload
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: ovis-ldms-debian-package
-#          path: ovis-ldms-debian-package/*
-#          if-no-files-found: error
-#          retention-days: 1
-#          include-hidden-files: true
-#          overwrite: true
-
       - name: Artifact Upload Confirmation
   #     if: success()
         continue-on-error: true
         run: |
-          echo ":white_check_mark: ovis-ldms_v4.5.2-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY      
+          echo ":white_check_mark: ovis-ldms_4.4.6-1_arm.deb artifact uploaded! :rocket:" >> $GITHUB_STEP_SUMMARY      
 #      - name: Build and push by digest
 #        if: success()
 #        id: build_push
@@ -214,7 +175,7 @@ jobs:
 #  meta:
 #    strategy:
 #      fail-fast: false
-#    runs-on: debian:bullseye
+#    runs-on: debian-bullseye
 #    needs:
 #      - build
 #        
@@ -252,7 +213,7 @@ jobs:
 #          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
 #
 #  uploadpackage:
-#    runs-on: debian:bullseye
+#    runs-on: debian-bullseye
 #    needs:
 #      - build
 #    steps:
@@ -314,7 +275,7 @@ jobs:
 #      run: |
 #        docker buildx build \
 #        --platform ${{ steps.prepare.outputs.docker_platform }} \
-#        --tag arm64-ubuntu-apt-webserver \
+#        --tag arm64-debian-apt-webserver \
 #        --provenance false \
 #        --sbom false \
 #        --file ./test-apt-server/Dockerfile \
