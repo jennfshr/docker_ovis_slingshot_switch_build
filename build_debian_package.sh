@@ -1,6 +1,6 @@
 #!/bin/bash
 # This is a simple automation that will write and utilize a Dockerfile
-# to pull a debian image, and within it build from source tag v4.4.3 OVIS-HPC/ovis.git
+# to pull a debian image, and within it build from source tag v4.5.2 OVIS-HPC/ovis.git
 # for the target platform arch (i.e., ARM64), then extract from the image a
 # archive that is able to be extracted onto a HPE Slingshot Switch
 # usage: ./run_ldms_docker.sh
@@ -35,10 +35,10 @@ export DEBEMAIL="$DEBEMAIL" && \
 export DEBFULLNAME="$DEBFULLNAME" && \
 export DEB_BUILD_ARCH="arm64" && \
 echo "Cloning ovis" && \
-git clone http://github.com/ovis-hpc/ovis.git -b v4.4.3 ovis-ldms-4.4.3 && \
-tar cfJ ovis-ldms-4.4.3.tar.xz ovis-ldms-4.4.3 && \
-cd ovis-ldms-4.4.3 && \
-dh_make -i -y -f ../ovis-ldms-4.4.3.tar.xz -e jkgreen@sandia.gov -c bsd && \
+git clone http://github.com/ovis-hpc/ovis.git -b v4.5.2 ovis-ldms-4.5.2 && \
+tar cfJ ovis-ldms-4.5.2.tar.xz ovis-ldms-4.5.2 && \
+cd ovis-ldms-4.5.2 && \
+dh_make -i -y -f ../ovis-ldms-4.5.2.tar.xz -e jkgreen@sandia.gov -c bsd && \
 [ -f debian/control ] && \
 echo "\
 Source: ovis-ldms
@@ -156,7 +156,7 @@ echo ""
 DEB_BUILD_ARCH="arm64"
 
 # Setup the Dockerfile via a heredoc function (adjustable above ^^)
-LDMS_PREFIX="/ovis_v4.4.3"
+LDMS_PREFIX="/ovis_v4.5.2"
 [ -f Dockerfile ] && rm Dockerfile
 heredoc_dockerfile
 docker build -t ldms-slingshot-build .
@@ -180,8 +180,8 @@ docker run --entrypoint tar ldms-slingshot-build \
   echo "Archive at ${LDMS_ARTIFACT_PATH}/${LDMS_PREFIX//\/}.tar.xz not found!"
 # Sanity Check the sampler libs and script staging in archive
 tar --extract --file=${LDMS_ARTIFACT_PATH}/${LDMS_PREFIX//\/}.tar.xz \
-  ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb \
+  ovis-ldms-debian-package/ovis-ldms_4.5.2-1_arm64.deb \
   && file ovis-ldms-debian-package/*.deb \
-  && cp ovis-ldms-debian-package/ovis-ldms_4.4.3-1_arm64.deb archives/. \
-  && echo "Debian Package at $(readlink -f archives/ovis-ldms_4.4.3-1_arm64.deb)" \
+  && cp ovis-ldms-debian-package/ovis-ldms_4.5.2-1_arm64.deb archives/. \
+  && echo "Debian Package at $(readlink -f archives/ovis-ldms_4.5.2-1_arm64.deb)" \
   && echo "Debian arm64 LDMS Slingshot Switch Sampler Package Build is Complete"
