@@ -2,7 +2,7 @@ name: Package OVIS-LDMS SlingShot Switch Sampler for Debian ARM64
 
 on:
   push:
-    branches: [ "debian", "tidy" ] 
+    branches: [ "debian", "tidy", "debian-bullseye" ] 
   pull_request:
     branches: [ "debian" ]
  
